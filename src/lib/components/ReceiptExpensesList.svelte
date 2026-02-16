@@ -1,0 +1,96 @@
+<script lang="ts">
+	import { createNewExpense, type Expense } from '$lib';
+	import type { Receipt } from '$lib/prompt';
+	import ReceiptExpensesEditor from './ReceiptExpensesEditor.svelte';
+
+	type Props = {
+		receipts: (Receipt | null)[];
+		prevPage: () => void;
+	};
+
+	let { receipts = $bindable(), prevPage }: Props = $props();
+
+	let confirmed: boolean[] = $state([]);
+	let allConfirmed = $derived(confirmed.every((c) => c));
+
+	$effect(() => {
+		if (confirmed.length === 0 && receipts.length > 0) {
+			receipts.map((res) => {
+				// Receipts that couldn't be parsed are auto confirmed
+				if (res) confirmed.push(false);
+				else confirmed.push(true);
+			});
+		}
+	});
+
+	const generateExpenses = () => {
+		let out: Expense[] = [];
+		for (const receipt of receipts) {
+			if (receipt) {
+				let newExpense = createNewExpense();
+				newExpense.title = receipt.name;
+				newExpense.amount = receipt.total * receipt.split;
+				newExpense.category = receipt.category;
+
+				for (const item of receipt.items) {
+					let itemDesc = `${item.name}($${item.unit_price.toFixed(2)} x ${item.quantity})\n`;
+					console.log(itemDesc);
+					newExpense.description = newExpense.description.concat(itemDesc);
+				}
+				out.push(newExpense);
+			}
+		}
+		console.log(out);
+		return out;
+	};
+</script>
+
+<div class="list-container">
+	{#if receipts.length === 0}
+		<p class="empty-message">No receipts processed yet.</p>
+	{:else}
+		{#each receipts as _receipt, i (i)}
+			{#if receipts[i]}
+				<ReceiptExpensesEditor bind:receipt={receipts[i]} bind:confirmed={confirmed[i]} index={i} />
+			{:else}
+				<div class="error-card">
+					<h2>Receipt {i + 1}</h2>
+					<p>We couldn't read the data from this receipt. Please enter it manually.</p>
+				</div>
+			{/if}
+		{/each}
+	{/if}
+	{#if allConfirmed}
+		<button onclick={generateExpenses}>Upload Expenses</button>
+	{/if}
+</div>
+
+<style>
+	.list-container {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		width: 100%;
+		max-width: 700px;
+	}
+
+	.empty-message {
+		text-align: center;
+		color: var(--subtle-text-color);
+		font-size: 1.2rem;
+	}
+
+	.error-card {
+		background-color: var(--primary-color);
+		border: 1px solid var(--border-color);
+		border-radius: 0.5rem;
+		padding: 1.5rem;
+		text-align: center;
+		color: var(--subtle-text-color);
+	}
+
+	.error-card h2 {
+		margin: 0 0 0.5rem 0;
+		color: var(--text-color);
+	}
+</style>

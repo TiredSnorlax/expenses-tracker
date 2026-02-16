@@ -1,0 +1,193 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	type Rectangle = { left: number; top: number; width: number; height: number };
+
+	interface ImagePreview {
+		file: File;
+		rectangle: { left: number; top: number; width: number; height: number };
+		resultText?: string;
+	}
+
+	type Props = {
+		preview: ImagePreview;
+		index: number;
+	};
+
+	let { preview = $bindable(), index }: Props = $props();
+
+	let canvas: HTMLCanvasElement;
+	let dataURL = $state('');
+
+	// Dragging state
+	let dragHandle: 'tl' | 'tr' | 'bl' | 'br' | 'body' | null = $state(null);
+	let dragStart = { x: 0, y: 0 };
+	let initialRectangle: Rectangle | null = null;
+
+	let handleSize = 20;
+	let scaleFactorX = $state(1);
+	let scaleFactorY = $state(1);
+	let imgWidth = 0;
+	let imgHeight = 0;
+
+	const draw = () => {
+		if (!canvas) return;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		const img = new Image();
+		img.onload = () => {
+			imgWidth = img.width;
+			imgHeight = img.height;
+
+			canvas.width = img.width;
+			canvas.height = img.height;
+
+			let minHandleSize = Math.floor(img.width * 0.02);
+			if (handleSize < minHandleSize) handleSize = minHandleSize;
+			ctx.drawImage(img, 0, 0);
+			drawRectangle(ctx, preview.rectangle);
+		};
+		img.src = dataURL;
+	};
+
+	const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) => {
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, Math.PI * 2);
+		ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+		ctx.fill();
+		ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+		ctx.lineWidth = 2;
+		ctx.stroke();
+	};
+
+	const drawRectangle = (ctx: CanvasRenderingContext2D, rect: Rectangle) => {
+		const { left, top, width, height } = rect;
+		ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(left, top, width, height);
+
+		ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+		const handleRadius = handleSize / 2;
+		drawCircle(ctx, left, top, handleRadius);
+		drawCircle(ctx, left + width, top, handleRadius);
+		drawCircle(ctx, left, top + height, handleRadius);
+		drawCircle(ctx, left + width, top + height, handleRadius);
+	};
+
+	const getHandleAt = (rect: Rectangle, x: number, y: number) => {
+		const { left, top, width, height } = rect;
+		const hr = handleSize / 2;
+		console.log(x, y);
+		console.log(left, top, width, height, hr);
+		if (x >= left - hr && x <= left + hr && y >= top - hr && y <= top + hr) return 'tl';
+		if (x >= left + width - hr && x <= left + width + hr && y >= top - hr && y <= top + hr)
+			return 'tr';
+		if (x >= left - hr && x <= left + hr && y >= top + height - hr && y <= top + height + hr)
+			return 'bl';
+		if (
+			x >= left + width - hr &&
+			x <= left + width + hr &&
+			y >= top + height - hr &&
+			y <= top + height + hr
+		)
+			return 'br';
+		if (x >= left && x <= left + width && y >= top && y <= top + height) return 'body';
+		return null;
+	};
+
+	const onMouseDown = (e: MouseEvent) => {
+		if (!canvas) return;
+		const rect = canvas.getBoundingClientRect();
+
+		scaleFactorX = imgWidth / rect.width;
+		scaleFactorY = imgHeight / rect.height;
+
+		console.log(rect);
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+		const scaledX = x * scaleFactorX;
+		const scaledY = y * scaleFactorY;
+
+		const handle = getHandleAt(preview.rectangle, scaledX, scaledY);
+		console.log(handle);
+		if (handle) {
+			dragHandle = handle;
+			dragStart = { x: scaledX, y: scaledY };
+			initialRectangle = { ...preview.rectangle };
+		}
+	};
+
+	const onMouseMove = (e: MouseEvent) => {
+		if (!canvas) return;
+		if (!dragHandle || !initialRectangle) return;
+		const rect = canvas.getBoundingClientRect();
+		const dx = (e.clientX - rect.left) * scaleFactorX - dragStart.x;
+		const dy = (e.clientY - rect.top) * scaleFactorY - dragStart.y;
+
+		let newRect = { ...initialRectangle };
+
+		if (dragHandle === 'tl') {
+			newRect.left += dx;
+			newRect.top += dy;
+			newRect.width -= dx;
+			newRect.height -= dy;
+		} else if (dragHandle === 'tr') {
+			newRect.top += dy;
+			newRect.width += dx;
+			newRect.height -= dy;
+		} else if (dragHandle === 'bl') {
+			newRect.left += dx;
+			newRect.width -= dx;
+			newRect.height += dy;
+		} else if (dragHandle === 'br') {
+			newRect.width += dx;
+			newRect.height += dy;
+		} else if (dragHandle === 'body') {
+			newRect.left += dx;
+			newRect.top += dy;
+		}
+
+		preview.rectangle = newRect;
+		draw();
+	};
+
+	const onMouseUp = () => {
+		dragHandle = null;
+		initialRectangle = null;
+	};
+
+	onMount(() => {
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			dataURL = e.target?.result as string;
+		};
+		reader.readAsDataURL(preview.file);
+
+		canvas.addEventListener('mousemove', onMouseMove);
+		canvas.addEventListener('mouseup', onMouseUp);
+
+		return () => {
+			canvas.removeEventListener('mousemove', onMouseMove);
+			canvas.removeEventListener('mouseup', onMouseUp);
+		};
+	});
+
+	$effect(() => {
+		if (dataURL && canvas) {
+			draw();
+		}
+	});
+</script>
+
+<h3>Receipt {index + 1}:</h3>
+<canvas bind:this={canvas} onmousedown={onMouseDown}></canvas>
+
+<style>
+	canvas {
+		flex: 1 1 auto;
+		min-width: 400px;
+		max-width: 800px;
+		cursor: crosshair;
+	}
+</style>
