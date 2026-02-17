@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { createNewExpense, type Expense } from '$lib';
-	import { Timestamp } from 'firebase/firestore';
 	import { onMount } from 'svelte';
+	import DropdownSelection from './inputs/DropdownSelection.svelte';
 
 	type Props = {
 		addExpenses: (newExpenses: Expense[]) => Promise<void>;
 		categories: string[];
-		nextPage: () => void;
-		prevPage: () => void;
 	};
 
-	let { addExpenses, categories, nextPage, prevPage }: Props = $props();
+	let { addExpenses, categories }: Props = $props();
 
 	let newExpense: Expense | null = $state(null);
 	let showNewCategoryInput = $state(false);
@@ -39,6 +37,9 @@
 					placeholder="What did you spend on?"
 				/>
 			</div>
+			<div class="input-container category">
+				<DropdownSelection name="category" options={categories} value={newExpense.category} />
+			</div>
 			<div class="input-container">
 				<label for="description">Description</label>
 				<textarea
@@ -48,37 +49,6 @@
 				></textarea>
 			</div>
 			<div class="input-container">
-				<label for="category">Category</label>
-				<select
-					id="category"
-					bind:value={newExpense.category}
-					onchange={(e) => {
-						if (e.currentTarget.value === 'Other' && newExpense) {
-							showNewCategoryInput = true;
-							newExpense.category = '';
-						} else {
-							showNewCategoryInput = false;
-						}
-					}}
-				>
-					{#each categories as category}
-						<option value={category}>{category}</option>
-					{/each}
-					<option value="Other">Other</option>
-				</select>
-			</div>
-			{#if showNewCategoryInput}
-				<div class="input-container">
-					<label for="new-category">New Category</label>
-					<input
-						id="new-category"
-						type="text"
-						bind:value={newExpense.category}
-						placeholder="Enter new category"
-					/>
-				</div>
-			{/if}
-			<div class="input-container">
 				<label for="amount">Amount</label>
 				<div>
 					<span>$</span>
@@ -87,7 +57,6 @@
 			</div>
 			<div class="buttons">
 				<button class="add-button" onclick={addNewExpense}>Add Expense</button>
-				<button class="add-button" onclick={nextPage}>Scan Receipts</button>
 			</div>
 		</div>
 	</div>
@@ -126,8 +95,7 @@
 	}
 
 	input,
-	textarea,
-	select {
+	textarea {
 		background-color: var(--primary-color);
 		color: var(--text-color);
 		border: 1px solid var(--border-color);
@@ -154,7 +122,6 @@
 	}
 
 	button {
-		border: none;
 		padding: 0.75rem 1.5rem;
 		border-radius: 4px;
 		cursor: pointer;
@@ -165,11 +132,5 @@
 	.add-button {
 		background-color: var(--secondary-color);
 		color: white;
-	}
-
-	.cancel-button {
-		background-color: transparent;
-		color: var(--subtle-text-color);
-		border: 1px solid var(--border-color);
 	}
 </style>

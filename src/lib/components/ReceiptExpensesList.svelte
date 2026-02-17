@@ -6,9 +6,11 @@
 	type Props = {
 		receipts: (Receipt | null)[];
 		prevPage: () => void;
+		addExpenses: (expenses: Expense[]) => void;
+		categories: string[];
 	};
 
-	let { receipts = $bindable(), prevPage }: Props = $props();
+	let { receipts = $bindable(), prevPage, addExpenses, categories }: Props = $props();
 
 	let confirmed: boolean[] = $state([]);
 	let allConfirmed = $derived(confirmed.every((c) => c));
@@ -31,9 +33,14 @@
 				newExpense.title = receipt.name;
 				newExpense.amount = receipt.total * receipt.split;
 				newExpense.category = receipt.category;
+				newExpense.description = `Paid for ${receipt.split} share\n\n`;
 
 				for (const item of receipt.items) {
-					let itemDesc = `${item.name}($${item.unit_price.toFixed(2)} x ${item.quantity})\n`;
+					let itemDesc = `${item.quantity} x ${item.name}($${item.unit_price.toFixed(2)})\n`;
+					if (item.add_ons.length > 0) {
+						let addOnsCost = item.add_ons.reduce((acc, curr) => acc + curr.price, 0);
+						itemDesc += `\tAdd-ons ($${addOnsCost.toFixed(2)}): ${item.add_ons.map((addOn) => addOn.name).join(',\n\t')}\n`;
+					}
 					console.log(itemDesc);
 					newExpense.description = newExpense.description.concat(itemDesc);
 				}
@@ -41,7 +48,7 @@
 			}
 		}
 		console.log(out);
-		return out;
+		addExpenses(out);
 	};
 </script>
 
@@ -51,7 +58,12 @@
 	{:else}
 		{#each receipts as _receipt, i (i)}
 			{#if receipts[i]}
-				<ReceiptExpensesEditor bind:receipt={receipts[i]} bind:confirmed={confirmed[i]} index={i} />
+				<ReceiptExpensesEditor
+					bind:receipt={receipts[i]}
+					bind:confirmed={confirmed[i]}
+					index={i}
+					{categories}
+				/>
 			{:else}
 				<div class="error-card">
 					<h2>Receipt {i + 1}</h2>
@@ -69,9 +81,11 @@
 	.list-container {
 		display: flex;
 		flex-direction: column;
+		align-items: center;
 		gap: 2rem;
 		width: 100%;
-		max-width: 700px;
+		padding: 2rem 1rem;
+		padding-top: 5rem;
 	}
 
 	.empty-message {

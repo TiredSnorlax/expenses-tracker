@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate, type Expense } from '$lib';
+	import { ChevronDown } from '@lucide/svelte';
 
 	type Props = {
 		expense: Expense;
@@ -22,12 +23,14 @@
 			<span class="date">{formatDate(expense.timestamp.toDate())}</span>
 		</div>
 		<button class="open-btn" class:open onclick={() => (open = !open)}>
-			<span class="chevron">></span>
+			<span class="chevron">
+				<ChevronDown />
+			</span>
 		</button>
 	</div>
 	{#if open}
 		<div class="additional-details">
-			<span class="description">{expense.description}</span>
+			<pre class="description">{expense.description}</pre>
 			<div class="buttons">
 				<button onclick={() => deleteFunc(expense.id)} class="delete-btn">Delete</button>
 				<button class="edit-btn">Edit</button>
@@ -39,9 +42,6 @@
 <style>
 	button {
 		display: block;
-		background: none;
-		outline: none;
-		border: none;
 		padding: 0;
 		margin: 0;
 	}
@@ -106,7 +106,9 @@
 	}
 
 	.open-btn .chevron {
-		display: inline-block;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 		transition: transform 0.2s;
 		transform: rotate(90deg);
 	}
@@ -119,8 +121,9 @@
 		padding: 1rem;
 		border-top: 1px solid var(--border-color);
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: stretch;
 	}
 
 	.additional-details .description {
@@ -132,6 +135,7 @@
 	.additional-details .buttons {
 		display: flex;
 		gap: 0.5rem;
+		align-self: flex-end;
 	}
 
 	.additional-details .delete-btn,

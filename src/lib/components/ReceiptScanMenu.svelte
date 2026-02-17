@@ -8,9 +8,11 @@
 		getPromptResponse,
 		getReceiptFromResponse,
 		getSystemInstruction,
+		SAMPLE_RECEIPT,
 		type Receipt
 	} from '$lib/prompt';
 	import { PUBLIC_GEMINI_KEY } from '$env/static/public';
+	import { LoaderCircle } from '@lucide/svelte';
 
 	type Props = {
 		receipts: (Receipt | null)[];
@@ -30,15 +32,20 @@
 	let imagePreviews: ImagePreview[] = $state([]);
 	let processedData: string[] = $state([]);
 
+	// Loading States
+	let isSetupLoading = $state(false);
+	let isScanning = $state(false);
+	let isProcessing = $state(false);
+
 	const initScheduler = async () => {
-		console.log('init scheduler');
+		isSetupLoading = true;
 		const newScheduler = Tesseract.createScheduler();
 		for (let i = 0; i < 4; i++) {
 			const worker = await Tesseract.createWorker('eng', 3, { logger: (m) => console.log(m) });
 			newScheduler.addWorker(worker);
 		}
 		scheduler = newScheduler;
-		console.log('scheduler ready');
+		isSetupLoading = false;
 	};
 
 	const handleFileChange = (e: Event) => {
@@ -56,10 +63,10 @@
 					imagePreviews.push({
 						file,
 						rectangle: {
-							left: 20,
-							top: 20,
-							width: img.width - 40,
-							height: img.height - 40
+							left: 0,
+							top: 0,
+							width: img.width,
+							height: img.height
 						}
 					});
 					loadedFiles++;
@@ -72,6 +79,7 @@
 
 	const recognize = async () => {
 		if (!scheduler || imagePreviews.length === 0) return;
+		isScanning = true;
 		try {
 			const promises = imagePreviews.map((p) =>
 				scheduler!.addJob('recognize', p.file, { rectangle: { ...p.rectangle } })
@@ -83,11 +91,15 @@
 		} catch (error) {
 			console.error('Error recognizing files:', error);
 		} finally {
-			sendToApi();
+			console.log(processedData);
+			sendToApiTesting();
+			// sendToApi();
 		}
+		isScanning = false;
 	};
 
 	const sendToApi = async () => {
+		isProcessing = true;
 		receipts = []; // Clear previous responses
 		const genAI = new GoogleGenAI({ apiKey: PUBLIC_GEMINI_KEY });
 		console.log(genAI.models);
@@ -95,7 +107,7 @@
 		for (const data of processedData) {
 			try {
 				const response = await genAI.models.generateContent({
-					model: 'gemma-2.5-flash-lite',
+					model: 'gemini-2.5-flash-lite',
 					contents: data,
 					config: {
 						systemInstruction: getSystemInstruction()
@@ -105,6 +117,7 @@
 				if (response.text) {
 					const promptResponse = getPromptResponse(response.text);
 					const receipt = getReceiptFromResponse(promptResponse);
+					console.log(receipt);
 					receipts.push(receipt);
 				} else {
 					receipts.push(null);
@@ -119,7 +132,14 @@
 		imagePreviews = []; // Clear previews to show the editor list
 		console.log('done');
 
+		isProcessing = false;
 		// Goes on to the ReceiptExpenseList to confirm data
+		nextPage();
+	};
+
+	// So that the api doesn't run out of uses
+	const sendToApiTesting = () => {
+		receipts.push(SAMPLE_RECEIPT);
 		nextPage();
 	};
 
@@ -143,17 +163,32 @@ This parent should only be responsible for managing the state and coordinating t
 <div class="page-container">
 	<h1>Upload your receipts</h1>
 
-	<div class="actions">
-		<label for="file-upload" class="file-upload-label"> Select Files </label>
-		<input id="file-upload" type="file" accept="image/*" onchange={handleFileChange} multiple />
-	</div>
+	<!-- Loading States -->
+	{#if isSetupLoading}
+		<div class="loading">
+			<span class="spinner"><LoaderCircle /></span>
+			<p>Setting up...</p>
+		</div>
+	{/if}
+	{#if isScanning}
+		<div class="loading">
+			<span class="spinner"><LoaderCircle /></span>
+			<p>Scanning...</p>
+		</div>
+	{/if}
+	{#if isProcessing}
+		<div class="loading">
+			<span class="spinner"><LoaderCircle /></span>
+			<p>Processing...</p>
+		</div>
+	{/if}
 
 	{#if imagePreviews.length > 0}
-		<p class="info">Drag the box around the relevant information only</p>
 		<div class="buttons">
 			<button class="cancel" onclick={clearFiles}>Clear</button>
 			<button class="submit" onclick={recognize}> Recognize Text </button>
 		</div>
+		<p class="info">Drag the box around the relevant information only</p>
 		<div class="previews-container">
 			{#each imagePreviews as preview, i (preview.file.name)}
 				<div class="preview-card">
@@ -162,6 +197,11 @@ This parent should only be responsible for managing the state and coordinating t
 			{/each}
 		</div>
 	{/if}
+
+	<div class="actions">
+		<label for="file-upload" class="file-upload-label"> Select Files </label>
+		<input id="file-upload" type="file" accept="image/*" onchange={handleFileChange} multiple />
+	</div>
 </div>
 
 <style>
@@ -173,6 +213,29 @@ This parent should only be responsible for managing the state and coordinating t
 		flex-direction: column;
 		align-items: center;
 		gap: 1.5rem;
+	}
+
+	.loading {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.loading .spinner {
+		animation: spin 1s linear infinite;
+		display: flex;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.loading p {
+		font-size: 1.25rem;
+		font-weight: 500;
 	}
 
 	h1 {
@@ -207,10 +270,16 @@ This parent should only be responsible for managing the state and coordinating t
 		background-color: var(--border-color);
 	}
 
-	button {
+	.buttons {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 3rem;
+	}
+
+	.buttons button {
 		background-color: var(--secondary-color);
 		color: white;
-		border: none;
 		padding: 0.75rem 1.5rem;
 		border-radius: 0.5rem;
 		cursor: pointer;
@@ -218,16 +287,9 @@ This parent should only be responsible for managing the state and coordinating t
 		transition: background-color 0.2s;
 	}
 
-	.buttons {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
 	button.cancel {
 		background: none;
 		border: 1px solid var(--text-color);
-		color: var(--text-color);
 	}
 
 	.info {
@@ -237,9 +299,12 @@ This parent should only be responsible for managing the state and coordinating t
 	}
 
 	.previews-container {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
 		gap: 1.5rem;
+		width: 100%;
 	}
 
 	.preview-card {

@@ -1,100 +1,126 @@
 export const getSystemInstruction = () => {
 	return `
-  You are a data extraction engine.
+	You are a structured data extraction engine.
+  Your task is to extract normalized receipt data from raw receipt text and return it in the exact JSON format defined below.
 
-  Your task is to extract structured purchase data from raw receipt text.
-
-  Rules:
+  Rules (must follow all):
   - Output MUST be valid JSON only.
-  - Do NOT include explanations, comments, or additional text.
-  - Do NOT wrap the output in markdown.
-  - If a field is missing or cannot be confidently determined, use null.
-  - Do NOT invent items that are not present in the receipt.
+  - Do NOT include markdown, code fences, comments, or extra text.
+  - Do NOT include keys not defined in the schema.
+  - If information is missing or cannot be confidently determined, use null or an empty array.
+  - Do NOT invent items, add-ons, taxes, or values not present in the receipt.
 
-  JSON schema:
+  Required JSON schema:
   {
-    "total": number,
-    "category": string,
     "name": string,
-    "taxes" : [
+    "total": number | null,
+    "category": string | null,
+    "taxes": [
       {
         "name": string,
         "percentage": number,
-        "inclusive": boolean,
+        "inclusive": true
       }
-    ]
+    ],
     "items": [
       {
         "name": string,
         "quantity": number,
-        "unit_price": number
+        "unit_price": number,
+        "add_ons": [
+          {
+            "name": string,
+            "price": number
+          }
+        ]
       }
     ]
   }
 
-  Extraction requirements:
-  - "total" must be the final amount paid (after tax if present).
-  - "category" is what type of expense receipt is for (Must be one capitalised).
-  - "name" is what the receipt is for. This can be the company or brand name. (default to an empty string if not confindent)
-  - Examples of categories are Food, Entertainment, Transport, etc (default to an empty string if not confident).
-  - Each item must represent a purchasable line item.
-  - "quantity" must be numeric (default to 1 if not specified).
-  - "unit_price" must be the price for a single unit (not line total).
-  - "inclusive" is if the tax has already been included into the price of items (default to true)
-  - Ignore subtotals, tax lines, discounts, and payment method lines.
-  - Normalize prices to decimal numbers (e.g. 3.50).
-  - Preserve original item names without rewording.
-  - Do not include any comments like \`\`\` json.
+  Extraction rules:
+  - "name" is the merchant or store name.
+  - "category" is a high-level classification (e.g. "food", "beverages", "retail"). Use null if unclear.
+  - "total" must be the final amount paid.
+  - Taxes must only include explicitly listed taxes.
+  - "inclusive" must always be true.
+  - Quantity defaults to 1 if not specified.
+  - Unit price must be per-item, not line total.
+  - Add-ons are modifiers explicitly attached to an item (e.g. toppings, upgrades).
+  - These add-ons may be found on the next few lines after an item.
+  - If no add-ons exist for an item, return an empty array.
+  - Ignore payment methods, order numbers, subtotals, discounts, tips, and loyalty points.
 `;
 };
 
 export const SAMPLE_RESPONSE: PromptResponse = {
+	name: 'Nine Fresh',
 	total: 8.1,
-	name: 'SAMPLE',
-	category: 'Food',
+	category: 'food',
 	taxes: [
 		{
-			name: 'GET (Inclusive 9%)',
+			name: 'GST',
 			percentage: 9,
 			inclusive: true
 		}
 	],
 	items: [
 		{
-			name: 'Jasmine Tropical Ai- Yu B (6 Taro Balls)',
+			name: 'Jasmine Tropical Ai-Yu B (6 Taro Balls)',
 			quantity: 1,
-			unit_price: 4.5
+			unit_price: 4.5,
+			add_ons: []
 		},
 		{
-			name: 'Nine Fresh Signatu re {6 Taro Balls)',
+			name: 'Nine Fresh Signature (6 Taro Balls)',
 			quantity: 1,
-			unit_price: 3.6
+			unit_price: 3.6,
+			add_ons: [
+				{
+					name: 'No Bean Curd S',
+					price: 0
+				},
+				{
+					name: 'Soft Peanuts - P',
+					price: 0
+				}
+			]
 		}
 	]
 };
 
 export const SAMPLE_RECEIPT: Receipt = {
-	name: 'Sample',
-	total: 8.1,
 	split: 1,
-	category: 'Food',
+	name: 'Nine Fresh',
+	total: 8.1,
+	category: 'food',
 	taxes: [
 		{
-			name: 'GET (Inclusive 9%)',
+			name: 'GST',
 			percentage: 9,
 			inclusive: true
 		}
 	],
 	items: [
 		{
-			name: 'Jasmine Tropical Ai- Yu B (6 Taro Balls)',
+			name: 'Jasmine Tropical Ai-Yu B (6 Taro Balls)',
 			quantity: 1,
-			unit_price: 4.5
+			unit_price: 4.5,
+			add_ons: []
 		},
 		{
-			name: 'Nine Fresh Signatu re {6 Taro Balls)',
+			name: 'Nine Fresh Signature (6 Taro Balls)',
 			quantity: 1,
-			unit_price: 3.6
+			unit_price: 3.6,
+			add_ons: [
+				{
+					name: 'No Bean Curd S',
+					price: 0
+				},
+				{
+					name: 'Soft Peanuts - P',
+					price: 0
+				}
+			]
 		}
 	]
 };
@@ -124,6 +150,10 @@ export interface PromptResponse {
 		name: string;
 		quantity: number;
 		unit_price: number;
+		add_ons: {
+			name: string;
+			price: number;
+		}[];
 	}[];
 }
 
@@ -141,5 +171,9 @@ export interface Receipt {
 		name: string;
 		quantity: number;
 		unit_price: number;
+		add_ons: {
+			name: string;
+			price: number;
+		}[];
 	}[];
 }

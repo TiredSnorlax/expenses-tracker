@@ -17,6 +17,7 @@
 	let { preview = $bindable(), index }: Props = $props();
 
 	let canvas: HTMLCanvasElement;
+	let previewImg: HTMLImageElement | null = $state(null);
 	let dataURL = $state('');
 
 	// Dragging state
@@ -30,7 +31,7 @@
 	let imgWidth = 0;
 	let imgHeight = 0;
 
-	const draw = () => {
+	const load = () => {
 		if (!canvas) return;
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
@@ -45,10 +46,29 @@
 
 			let minHandleSize = Math.floor(img.width * 0.02);
 			if (handleSize < minHandleSize) handleSize = minHandleSize;
+
+			preview.rectangle.left = minHandleSize;
+			preview.rectangle.top = minHandleSize;
+			preview.rectangle.width = imgWidth - 2 * minHandleSize;
+			preview.rectangle.height = imgHeight - 2 * minHandleSize;
+
 			ctx.drawImage(img, 0, 0);
 			drawRectangle(ctx, preview.rectangle);
+
+			previewImg = img;
 		};
 		img.src = dataURL;
+	};
+
+	const draw = () => {
+		if (!canvas || !previewImg) return;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		console.log('draw');
+
+		ctx.drawImage(previewImg, 0, 0);
+		drawRectangle(ctx, preview.rectangle);
 	};
 
 	const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) => {
@@ -64,7 +84,7 @@
 	const drawRectangle = (ctx: CanvasRenderingContext2D, rect: Rectangle) => {
 		const { left, top, width, height } = rect;
 		ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-		ctx.lineWidth = 2;
+		ctx.lineWidth = 3;
 		ctx.strokeRect(left, top, width, height);
 
 		ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
@@ -111,7 +131,14 @@
 
 		const handle = getHandleAt(preview.rectangle, scaledX, scaledY);
 		console.log(handle);
+
 		if (handle) {
+			// Handle cursor styling
+			if (handle === 'body') {
+				canvas.style.cursor = 'move';
+			} else if (handle !== null) {
+				canvas.style.cursor = 'crosshair';
+			}
 			dragHandle = handle;
 			dragStart = { x: scaledX, y: scaledY };
 			initialRectangle = { ...preview.rectangle };
@@ -121,6 +148,7 @@
 	const onMouseMove = (e: MouseEvent) => {
 		if (!canvas) return;
 		if (!dragHandle || !initialRectangle) return;
+		console.log('move');
 		const rect = canvas.getBoundingClientRect();
 		const dx = (e.clientX - rect.left) * scaleFactorX - dragStart.x;
 		const dy = (e.clientY - rect.top) * scaleFactorY - dragStart.y;
@@ -155,6 +183,9 @@
 	const onMouseUp = () => {
 		dragHandle = null;
 		initialRectangle = null;
+
+		// Reset cursor style
+		canvas.style.cursor = 'default';
 	};
 
 	onMount(() => {
@@ -175,7 +206,7 @@
 
 	$effect(() => {
 		if (dataURL && canvas) {
-			draw();
+			load();
 		}
 	});
 </script>
@@ -186,8 +217,8 @@
 <style>
 	canvas {
 		flex: 1 1 auto;
-		min-width: 400px;
-		max-width: 800px;
-		cursor: crosshair;
+		max-width: 700px;
+		width: 100%;
+		height: 100%;
 	}
 </style>

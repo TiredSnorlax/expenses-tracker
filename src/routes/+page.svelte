@@ -7,19 +7,12 @@
 	import { authStore } from '$lib/stores/auth';
 
 	import { db } from '$lib/firebase';
-	import {
-		doc,
-		getDoc,
-		setDoc,
-		collection,
-		query,
-		where,
-		getDocs,
-		Timestamp
-	} from 'firebase/firestore';
+	import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 	let currentDate = $state(new Date());
 	let expenses: Expense[] = $state(defaultExpenses());
+
+	let noScroll = $state(false);
 
 	let user = $derived($authStore.user);
 	let profile: Profile | null = $state(null);
@@ -74,11 +67,11 @@
 	});
 </script>
 
-<main class="container">
+<main class="container" class:no-scroll={noScroll}>
 	{#if user && profile}
 		<UserAvatar {user} />
 		<Info bind:currentDate bind:expenses {profile} />
-		<ExpenseList bind:expenses {profile} {user} />
+		<ExpenseList bind:noScroll bind:expenses {profile} {user} />
 	{:else}
 		<SignIn />
 	{/if}
@@ -87,8 +80,13 @@
 <style>
 	.container {
 		max-width: 800px;
-		margin: 2rem auto;
+		margin: auto;
 		padding: 0 1rem;
 		color: var(--text-color);
+	}
+
+	.container.no-scroll {
+		max-height: 100vh;
+		overflow: hidden;
 	}
 </style>

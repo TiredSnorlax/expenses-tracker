@@ -8,12 +8,13 @@
 	import { db } from '$lib/firebase';
 
 	type Props = {
+		noScroll: boolean;
 		expenses: Expense[];
 		profile: Profile;
 		user: AuthUser;
 	};
 
-	let { expenses = $bindable(), profile, user }: Props = $props();
+	let { noScroll = $bindable(), expenses = $bindable(), profile, user }: Props = $props();
 	let addExpensesMenuOpen: boolean = $state(false);
 
 	// Filter by Category
@@ -71,6 +72,8 @@
 				const expenseDocRef = doc(expenseCol);
 				newExpense.id = expenseDocRef.id;
 				newExpense.profileId = user.uid;
+				// This will ensure that having caps won't affect the category
+				newExpense.category = newExpense.category.toLowerCase();
 				newExpenseIds.push(expenseDocRef.id);
 				// Add the new expense document to the batch
 				batch.set(expenseDocRef, newExpense);
@@ -112,6 +115,15 @@
 			console.error('Error deleting expense:', error);
 		}
 	};
+
+	$effect(() => {
+		console.log('Set scroll');
+		if (addExpensesMenuOpen) {
+			noScroll = true;
+		} else {
+			noScroll = false;
+		}
+	});
 </script>
 
 <section>

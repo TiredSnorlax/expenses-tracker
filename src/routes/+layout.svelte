@@ -29,5 +29,27 @@
 
 	:global(*) {
 		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
+
+	:global(button) {
+		border: none;
+		outline: none;
+		background: none;
+	}
+
+	/* Chrome, Safari, Edge, Opera */
+
+	:global(input::-webkit-outer-spin-button),
+	:global(input::-webkit-inner-spin-button) {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	/* Firefox */
+	:global(input[type='number']) {
+		appearance: textfield;
+		-moz-appearance: textfield;
 	}
 </style>
