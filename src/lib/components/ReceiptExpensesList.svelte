@@ -1,31 +1,33 @@
 <script lang="ts">
 	import { createNewExpense, type Expense } from '$lib';
 	import type { Receipt } from '$lib/prompt';
+	import { onMount } from 'svelte';
 	import ReceiptExpensesEditor from './ReceiptExpensesEditor.svelte';
 
 	type Props = {
 		receipts: (Receipt | null)[];
-		prevPage: () => void;
-		addExpenses: (expenses: Expense[]) => void;
+		closePage: () => void;
+		addExpenses: (expenses: Expense[]) => Promise<void>;
 		categories: string[];
 	};
 
-	let { receipts = $bindable(), prevPage, addExpenses, categories }: Props = $props();
+	let { receipts = $bindable(), closePage, addExpenses, categories }: Props = $props();
 
 	let confirmed: boolean[] = $state([]);
 	let allConfirmed = $derived(confirmed.every((c) => c));
 
-	$effect(() => {
+	onMount(() => {
 		if (confirmed.length === 0 && receipts.length > 0) {
 			receipts.map((res) => {
 				// Receipts that couldn't be parsed are auto confirmed
 				if (res) confirmed.push(false);
 				else confirmed.push(true);
 			});
+			console.log(confirmed);
 		}
 	});
 
-	const generateExpenses = () => {
+	const generateExpenses = async () => {
 		let out: Expense[] = [];
 		for (const receipt of receipts) {
 			if (receipt) {
@@ -48,7 +50,8 @@
 			}
 		}
 		console.log(out);
-		addExpenses(out);
+		await addExpenses(out);
+		closePage();
 	};
 </script>
 
@@ -72,9 +75,9 @@
 			{/if}
 		{/each}
 	{/if}
-	{#if allConfirmed}
-		<button onclick={generateExpenses}>Upload Expenses</button>
-	{/if}
+	<button class="confirm-btn" disabled={!allConfirmed} onclick={generateExpenses}
+		>Upload Expenses</button
+	>
 </div>
 
 <style>
@@ -106,5 +109,19 @@
 	.error-card h2 {
 		margin: 0 0 0.5rem 0;
 		color: var(--text-color);
+	}
+
+	.confirm-btn {
+		background: var(--secondary-color);
+		color: var(--text-color);
+		padding: 0.5rem 1rem;
+		border-radius: 0.5rem;
+		cursor: pointer;
+	}
+
+	.confirm-btn:disabled {
+		background: var(--primary-color);
+		color: var(--text-color);
+		cursor: not-allowed;
 	}
 </style>

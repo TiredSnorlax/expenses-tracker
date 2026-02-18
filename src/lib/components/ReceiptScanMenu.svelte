@@ -13,6 +13,7 @@
 	} from '$lib/prompt';
 	import { PUBLIC_GEMINI_KEY } from '$env/static/public';
 	import { LoaderCircle } from '@lucide/svelte';
+	import { processImageForOCR } from '$lib/utils';
 
 	type Props = {
 		receipts: (Receipt | null)[];
@@ -53,27 +54,19 @@
 		if (!target.files) return;
 
 		const files = Array.from(target.files);
-		let loadedFiles = 0;
 
 		files.forEach((file) => {
-			const reader = new FileReader();
-			reader.onload = (re) => {
-				const img = new Image();
-				img.onload = () => {
-					imagePreviews.push({
-						file,
-						rectangle: {
-							left: 0,
-							top: 0,
-							width: img.width,
-							height: img.height
-						}
-					});
-					loadedFiles++;
-				};
-				img.src = re.target?.result as string;
-			};
-			reader.readAsDataURL(file);
+			processImageForOCR(file).then(({ processedFile, width, height }) => {
+				imagePreviews.push({
+					file: processedFile,
+					rectangle: {
+						left: 0,
+						top: 0,
+						width: width,
+						height: height
+					}
+				});
+			});
 		});
 	};
 
@@ -92,8 +85,8 @@
 			console.error('Error recognizing files:', error);
 		} finally {
 			console.log(processedData);
-			sendToApiTesting();
-			// sendToApi();
+			// sendToApiTesting();
+			sendToApi();
 		}
 		isScanning = false;
 	};
@@ -116,6 +109,7 @@
 
 				if (response.text) {
 					const promptResponse = getPromptResponse(response.text);
+					console.log(promptResponse);
 					const receipt = getReceiptFromResponse(promptResponse);
 					console.log(receipt);
 					receipts.push(receipt);

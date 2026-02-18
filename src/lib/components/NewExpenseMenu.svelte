@@ -11,7 +11,6 @@
 	let { addExpenses, categories }: Props = $props();
 
 	let newExpense: Expense | null = $state(null);
-	let showNewCategoryInput = $state(false);
 
 	const addNewExpense = () => {
 		if (!newExpense) return;
@@ -38,7 +37,7 @@
 				/>
 			</div>
 			<div class="input-container category">
-				<DropdownSelection name="category" options={categories} value={newExpense.category} />
+				<DropdownSelection name="Category" options={categories} value={newExpense.category} />
 			</div>
 			<div class="input-container">
 				<label for="description">Description</label>
@@ -50,9 +49,9 @@
 			</div>
 			<div class="input-container">
 				<label for="amount">Amount</label>
-				<div>
+				<div class="amount-input-wrapper">
 					<span>$</span>
-					<input id="amount" type="number" bind:value={newExpense.amount} />
+					<input id="amount" type="number" bind:value={newExpense.amount} placeholder="0.00" />
 				</div>
 			</div>
 			<div class="buttons">
@@ -67,6 +66,9 @@
 		padding: 2rem;
 		border-radius: 8px;
 		width: 100%;
+
+		margin: 0 auto;
+		max-width: 800px;
 	}
 
 	h3 {
@@ -132,5 +134,42 @@
 	.add-button {
 		background-color: var(--secondary-color);
 		color: white;
+	}
+
+	.amount-input-wrapper {
+		display: flex;
+		align-items: center;
+		background-color: var(--primary-color);
+		border-radius: 8px;
+		padding: 0 1rem;
+		border: 1px solid var(--primary-color);
+		transition: border-color 0.2s;
+	}
+
+	.amount-input-wrapper:focus-within {
+		border-color: var(--secondary-color);
+		outline: 1px solid var(--secondary-color);
+	}
+
+	.amount-input-wrapper span {
+		font-size: 2.5rem;
+		font-weight: 300;
+		color: var(--subtle-text-color);
+		margin-right: 0.75rem;
+	}
+
+	.amount-input-wrapper input {
+		font-size: 2.5rem;
+		font-weight: 600;
+		color: var(--text-color);
+		background-color: transparent;
+		border: none;
+		outline: none;
+		padding: 0.75rem 0;
+		width: 100%;
+	}
+
+	.amount-input-wrapper input#amount {
+		padding: 0.75rem 0;
 	}
 </style>

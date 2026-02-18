@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { formatDate, type Expense } from '$lib';
+	import { capitalize } from '$lib/utils';
+
 	import { ChevronDown } from '@lucide/svelte';
 
 	type Props = {
@@ -16,7 +18,7 @@
 	<div class="upper">
 		<div class="expense-details">
 			<span class="title">{expense.title}</span>
-			<span class="category">{expense.category}</span>
+			<span class="category">{capitalize(expense.category)}</span>
 		</div>
 		<div class="expense-value">
 			<span class="total">S${expense.amount.toFixed(2)}</span>
@@ -110,11 +112,11 @@
 		justify-content: center;
 		align-items: center;
 		transition: transform 0.2s;
-		transform: rotate(90deg);
+		transform: rotate(0deg);
 	}
 
 	.open-btn.open .chevron {
-		transform: rotate(270deg);
+		transform: rotate(180deg);
 	}
 
 	.additional-details {

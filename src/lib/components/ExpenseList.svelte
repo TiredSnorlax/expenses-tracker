@@ -6,6 +6,7 @@
 
 	import { arrayRemove, arrayUnion, collection, doc, writeBatch } from 'firebase/firestore';
 	import { db } from '$lib/firebase';
+	import { capitalize } from '$lib/utils';
 
 	type Props = {
 		noScroll: boolean;
@@ -142,7 +143,7 @@
 				class:selected={selectedCategory === category}
 				onclick={() => (selectedCategory = category)}
 			>
-				{category}
+				{capitalize(category)}
 			</button>
 		{/each}
 	</div>
@@ -271,6 +272,10 @@
 		padding: 0.75rem 1rem;
 		cursor: pointer;
 		text-align: left;
+
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.sort-by-menu button.selected {

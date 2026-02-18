@@ -38,6 +38,10 @@
 		}
 	};
 
+	const closePage = () => {
+		addExpensesMenuOpen = false;
+	};
+
 	let receipts: (Receipt | null)[] = $state([]);
 
 	let onAddExpenses = async (newExpenses: Expense[]) => {
@@ -69,7 +73,7 @@
 				<ReceiptScanMenu bind:receipts {nextPage} {prevPage} />
 			{/if}
 			{#if currentPage === 3 && receipts.length > 0}
-				<ReceiptExpensesList bind:receipts {prevPage} {addExpenses} {categories} />
+				<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
 			{/if}
 			<button class="cancel-btn" onclick={prevPage}><ArrowLeft /></button>
 		</div>
