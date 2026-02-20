@@ -9,7 +9,7 @@ export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.sli
  */
 export const processImageForOCR = (
 	file: File,
-	threshold: number = 135
+	threshold: number = 130
 ): Promise<{ processedFile: File; width: number; height: number }> => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();

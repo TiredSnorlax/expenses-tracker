@@ -32,6 +32,7 @@
 			<div class="card">
 				<p>{user.displayName}</p>
 				<span>{user.email}</span>
+				<a href="/profile" class="profile-link">Profile</a>
 				<button class="signout-btn" onclick={handleSignOut}>Sign Out</button>
 			</div>
 		{/if}
@@ -98,19 +99,33 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: flex-start;
+		min-width: 150px;
 	}
 
+	.card .profile-link,
 	.card .signout-btn {
+		display: block;
 		border: 1px solid grey;
 		border-radius: 0.5rem;
 		padding: 0.5rem;
-
-		margin-top: 1rem;
-		align-self: center;
+		width: 100%;
+		text-align: center;
+		text-decoration: none;
+		color: inherit;
+		cursor: pointer;
+		font-size: 0.9rem;
+		box-sizing: border-box;
 	}
 
+	.card .profile-link {
+		margin-top: 1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.card .profile-link:hover,
 	.card .signout-btn:hover {
 		background: var(--secondary-color);
 		color: white;
+		border-color: var(--secondary-color);
 	}
 </style>

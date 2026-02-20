@@ -42,13 +42,26 @@ export const getSystemInstruction = () => {
   - "category" is a high-level classification (e.g. "food", "beverages", "retail"). Use null if unclear.
   - "total" must be the final amount paid.
   - Taxes must only include explicitly listed taxes.
-  - "inclusive" must always be true.
   - Quantity defaults to 1 if not specified.
   - Unit price must be per-item, not line total.
-  - Add-ons are modifiers explicitly attached to an item (e.g. toppings, upgrades).
-  - These add-ons may be found on the next few lines after an item.
-  - If no add-ons exist for an item, return an empty array.
   - Ignore payment methods, order numbers, subtotals, discounts, tips, and loyalty points.
+
+
+  Add-on Rules:
+  - An add-on is a modifier, customization, or supplement tied to a parent item, not a standalone purchase.
+  - Classify a line as an add-on if ANY of the following apply:
+      - It is indented under the line above it.
+      - It is prefixed with a symbol (+, *, -, >).
+      - Its name implies a modifier or customization (e.g. "Extra X", "No X", "Add X", "Sub X", "Upsize").
+      - It has no standalone meaning without the item above it (e.g. "Oat Milk" after "Latte").
+      - It lacks its own quantity and only makes sense in context.
+  - A line is an add-on if it logically belongs to the item above it AND any of these apply:
+      - It has a 0.00 price and is a component or customization of the parent.
+      - It is priced lower than the parent and only makes sense in its context.
+      - The parent is a bundle (e.g. "Meal", "Set", "Combo") — treat all subsequent component lines as add-ons until the next standalone item.
+  - Do not use price alone as the signal — context must support the relationship.
+  - Never list add-ons as standalone items. Always nest them in the parent item's add_ons array.
+  - When ambiguous, prefer treating a line as an add-on if it directly follows a related item.
 `;
 };
 

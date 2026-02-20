@@ -70,7 +70,7 @@
 				<NewExpenseMenu {addExpenses} {categories} />
 			{/if}
 			{#if currentPage === 2}
-				<ReceiptScanMenu bind:receipts {nextPage} {prevPage} />
+				<ReceiptScanMenu bind:receipts {nextPage} />
 			{/if}
 			{#if currentPage === 3 && receipts.length > 0}
 				<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />

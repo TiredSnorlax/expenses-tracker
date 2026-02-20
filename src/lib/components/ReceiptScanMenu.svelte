@@ -14,14 +14,14 @@
 	import { PUBLIC_GEMINI_KEY } from '$env/static/public';
 	import { LoaderCircle } from '@lucide/svelte';
 	import { processImageForOCR } from '$lib/utils';
+	import LoadingSpinner from './misc/LoadingSpinner.svelte';
 
 	type Props = {
 		receipts: (Receipt | null)[];
 		nextPage: () => void;
-		prevPage: () => void;
 	};
 
-	let { receipts = $bindable(), nextPage, prevPage }: Props = $props();
+	let { receipts = $bindable(), nextPage }: Props = $props();
 
 	let scheduler: Scheduler | null = $state(null);
 
@@ -42,7 +42,9 @@
 		isSetupLoading = true;
 		const newScheduler = Tesseract.createScheduler();
 		for (let i = 0; i < 4; i++) {
+			// TODO: add a progress bar using this
 			const worker = await Tesseract.createWorker('eng', 3, { logger: (m) => console.log(m) });
+			await worker.setParameters({ preserve_interword_spaces: '1' });
 			newScheduler.addWorker(worker);
 		}
 		scheduler = newScheduler;
@@ -84,7 +86,7 @@
 		} catch (error) {
 			console.error('Error recognizing files:', error);
 		} finally {
-			console.log(processedData);
+			$state.snapshot(processedData).map((data) => console.log(data));
 			// sendToApiTesting();
 			sendToApi();
 		}
@@ -95,7 +97,6 @@
 		isProcessing = true;
 		receipts = []; // Clear previous responses
 		const genAI = new GoogleGenAI({ apiKey: PUBLIC_GEMINI_KEY });
-		console.log(genAI.models);
 
 		for (const data of processedData) {
 			try {
@@ -159,22 +160,13 @@ This parent should only be responsible for managing the state and coordinating t
 
 	<!-- Loading States -->
 	{#if isSetupLoading}
-		<div class="loading">
-			<span class="spinner"><LoaderCircle /></span>
-			<p>Setting up...</p>
-		</div>
+		<LoadingSpinner msg="Setting up..." />
 	{/if}
 	{#if isScanning}
-		<div class="loading">
-			<span class="spinner"><LoaderCircle /></span>
-			<p>Scanning...</p>
-		</div>
+		<LoadingSpinner msg="Scanning..." />
 	{/if}
 	{#if isProcessing}
-		<div class="loading">
-			<span class="spinner"><LoaderCircle /></span>
-			<p>Processing...</p>
-		</div>
+		<LoadingSpinner msg="Processing..." />
 	{/if}
 
 	{#if imagePreviews.length > 0}
@@ -192,10 +184,12 @@ This parent should only be responsible for managing the state and coordinating t
 		</div>
 	{/if}
 
-	<div class="actions">
-		<label for="file-upload" class="file-upload-label"> Select Files </label>
-		<input id="file-upload" type="file" accept="image/*" onchange={handleFileChange} multiple />
-	</div>
+	{#if !isSetupLoading && !isProcessing && !isScanning}
+		<div class="actions">
+			<label for="file-upload" class="file-upload-label"> Select Files </label>
+			<input id="file-upload" type="file" accept="image/*" onchange={handleFileChange} multiple />
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -207,29 +201,6 @@ This parent should only be responsible for managing the state and coordinating t
 		flex-direction: column;
 		align-items: center;
 		gap: 1.5rem;
-	}
-
-	.loading {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.loading .spinner {
-		animation: spin 1s linear infinite;
-		display: flex;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	.loading p {
-		font-size: 1.25rem;
-		font-weight: 500;
 	}
 
 	h1 {
