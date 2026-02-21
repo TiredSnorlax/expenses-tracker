@@ -82,6 +82,7 @@
 		max-width: 800px;
 		margin: auto;
 		padding: 0 1rem;
+		padding-top: 2rem;
 		color: var(--text-color);
 	}
 

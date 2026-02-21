@@ -17,7 +17,6 @@
 	let taxesOpen = $state(true);
 
 	const getTotal = () => {
-		console.log('get total');
 		let total = 0;
 		for (const item of receipt.items) {
 			let itemPrice = item.unit_price;

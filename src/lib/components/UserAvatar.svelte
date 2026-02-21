@@ -17,10 +17,6 @@
 			console.error('Sign-out error:', error);
 		}
 	};
-
-	onMount(() => {
-		console.log(user);
-	});
 </script>
 
 {#if user}

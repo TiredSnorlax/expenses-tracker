@@ -118,7 +118,6 @@
 	};
 
 	$effect(() => {
-		console.log('Set scroll');
 		if (addExpensesMenuOpen) {
 			noScroll = true;
 		} else {

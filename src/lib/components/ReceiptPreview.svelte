@@ -65,8 +65,6 @@
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		console.log('draw');
-
 		ctx.drawImage(previewImg, 0, 0);
 		drawRectangle(ctx, preview.rectangle);
 	};
@@ -98,8 +96,6 @@
 	const getHandleAt = (rect: Rectangle, x: number, y: number) => {
 		const { left, top, width, height } = rect;
 		const hr = handleSize / 2;
-		console.log(x, y);
-		console.log(left, top, width, height, hr);
 		if (x >= left - hr && x <= left + hr && y >= top - hr && y <= top + hr) return 'tl';
 		if (x >= left + width - hr && x <= left + width + hr && y >= top - hr && y <= top + hr)
 			return 'tr';
@@ -123,14 +119,12 @@
 		scaleFactorX = imgWidth / rect.width;
 		scaleFactorY = imgHeight / rect.height;
 
-		console.log(rect);
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
 		const scaledX = x * scaleFactorX;
 		const scaledY = y * scaleFactorY;
 
 		const handle = getHandleAt(preview.rectangle, scaledX, scaledY);
-		console.log(handle);
 
 		if (handle) {
 			// Handle cursor styling
@@ -148,7 +142,6 @@
 	const onMouseMove = (e: MouseEvent) => {
 		if (!canvas) return;
 		if (!dragHandle || !initialRectangle) return;
-		console.log('move');
 		const rect = canvas.getBoundingClientRect();
 		const dx = (e.clientX - rect.left) * scaleFactorX - dragStart.x;
 		const dy = (e.clientY - rect.top) * scaleFactorY - dragStart.y;

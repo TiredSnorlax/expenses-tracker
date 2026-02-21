@@ -41,7 +41,7 @@
 		const newScheduler = Tesseract.createScheduler();
 		for (let i = 0; i < 4; i++) {
 			// TODO: add a progress bar using this
-			const worker = await Tesseract.createWorker('eng', 3, { logger: (m) => console.log(m) });
+			const worker = await Tesseract.createWorker('eng', 3);
 			await worker.setParameters({ preserve_interword_spaces: '1' });
 			newScheduler.addWorker(worker);
 		}
@@ -84,7 +84,6 @@
 		} catch (error) {
 			console.error('Error recognizing files:', error);
 		} finally {
-			$state.snapshot(processedData).map((data) => console.log(data));
 			// sendToApiTesting();
 			sendToApi();
 		}
@@ -107,7 +106,6 @@
 
 		processedData = [];
 		imagePreviews = []; // Clear previews to show the editor list
-		console.log('done');
 
 		isProcessing = false;
 		// Goes on to the ReceiptExpenseList to confirm data

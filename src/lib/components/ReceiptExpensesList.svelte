@@ -23,7 +23,6 @@
 				if (res) confirmed.push(false);
 				else confirmed.push(true);
 			});
-			console.log(confirmed);
 		}
 	});
 
@@ -43,13 +42,11 @@
 						let addOnsCost = item.add_ons.reduce((acc, curr) => acc + curr.price, 0);
 						itemDesc += `\tAdd-ons ($${addOnsCost.toFixed(2)}): ${item.add_ons.map((addOn) => addOn.name).join(',\n\t')}\n`;
 					}
-					console.log(itemDesc);
 					newExpense.description = newExpense.description.concat(itemDesc);
 				}
 				out.push(newExpense);
 			}
 		}
-		console.log(out);
 		await addExpenses(out);
 		closePage();
 	};
@@ -118,6 +115,7 @@
 		font-size: 1rem;
 
 		width: 100%;
+		max-width: 700px;
 
 		transition: all 0.3s ease;
 	}
