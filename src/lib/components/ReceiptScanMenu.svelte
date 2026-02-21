@@ -11,8 +11,6 @@
 		SAMPLE_RECEIPT,
 		type Receipt
 	} from '$lib/prompt';
-	import { PUBLIC_GEMINI_KEY } from '$env/static/public';
-	import { LoaderCircle } from '@lucide/svelte';
 	import { processImageForOCR } from '$lib/utils';
 	import LoadingSpinner from './misc/LoadingSpinner.svelte';
 
@@ -96,32 +94,16 @@
 	const sendToApi = async () => {
 		isProcessing = true;
 		receipts = []; // Clear previous responses
-		const genAI = new GoogleGenAI({ apiKey: PUBLIC_GEMINI_KEY });
-
-		for (const data of processedData) {
-			try {
-				const response = await genAI.models.generateContent({
-					model: 'gemini-2.5-flash-lite',
-					contents: data,
-					config: {
-						systemInstruction: getSystemInstruction()
-					}
-				});
-
-				if (response.text) {
-					const promptResponse = getPromptResponse(response.text);
-					console.log(promptResponse);
-					const receipt = getReceiptFromResponse(promptResponse);
-					console.log(receipt);
-					receipts.push(receipt);
-				} else {
-					receipts.push(null);
-				}
-			} catch (error) {
-				console.error('Error parsing API response:', error);
-				receipts.push(null);
+		const response = await fetch('/api/prompt', {
+			method: 'POST',
+			body: JSON.stringify({ processedData }),
+			headers: {
+				'content-type': 'application/json'
 			}
-		}
+		});
+
+		let data = await response.json();
+		receipts = data.receipts as (Receipt | null)[];
 
 		processedData = [];
 		imagePreviews = []; // Clear previews to show the editor list
@@ -172,7 +154,7 @@ This parent should only be responsible for managing the state and coordinating t
 	{#if imagePreviews.length > 0}
 		<div class="buttons">
 			<button class="cancel" onclick={clearFiles}>Clear</button>
-			<button class="submit" onclick={recognize}> Recognize Text </button>
+			<button class="submit" onclick={recognize}> Scan Receipts </button>
 		</div>
 		<p class="info">Drag the box around the relevant information only</p>
 		<div class="previews-container">

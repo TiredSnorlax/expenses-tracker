@@ -75,9 +75,7 @@
 			{/if}
 		{/each}
 	{/if}
-	<button class="confirm-btn" disabled={!allConfirmed} onclick={generateExpenses}
-		>Upload Expenses</button
-	>
+	<button class="confirm-btn" disabled={!allConfirmed} onclick={generateExpenses}>Upload</button>
 </div>
 
 <style>
@@ -114,14 +112,20 @@
 	.confirm-btn {
 		background: var(--secondary-color);
 		color: var(--text-color);
-		padding: 0.5rem 1rem;
-		border-radius: 0.5rem;
+		padding: 1rem;
+		border-radius: 5px;
 		cursor: pointer;
+		font-size: 1rem;
+
+		width: 100%;
+
+		transition: all 0.3s ease;
 	}
 
 	.confirm-btn:disabled {
 		background: var(--primary-color);
-		color: var(--text-color);
+		color: var(--subtle-text-color);
 		cursor: not-allowed;
+		padding: 0.5rem 1rem;
 	}
 </style>

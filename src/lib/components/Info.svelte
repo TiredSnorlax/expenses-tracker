@@ -231,4 +231,10 @@
 		margin-bottom: 2rem;
 		border: 1px solid var(--border-color);
 	}
+
+	@media (max-width: 600px) {
+		.overview {
+			padding-inline: 0.5rem;
+		}
+	}
 </style>

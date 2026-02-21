@@ -188,6 +188,77 @@
 		canvas.style.cursor = 'default';
 	};
 
+	const onTouchStart = (e: TouchEvent) => {
+		if (!canvas) return;
+		if (e.touches.length > 1) return;
+
+		const rect = canvas.getBoundingClientRect();
+
+		scaleFactorX = imgWidth / rect.width;
+		scaleFactorY = imgHeight / rect.height;
+
+		const touch = e.touches[0];
+		const x = touch.clientX - rect.left;
+		const y = touch.clientY - rect.top;
+		const scaledX = x * scaleFactorX;
+		const scaledY = y * scaleFactorY;
+
+		const handle = getHandleAt(preview.rectangle, scaledX, scaledY);
+
+		if (handle) {
+			if (e.cancelable) e.preventDefault();
+			dragHandle = handle;
+			dragStart = { x: scaledX, y: scaledY };
+			initialRectangle = { ...preview.rectangle };
+		}
+	};
+
+	const onTouchMove = (e: TouchEvent) => {
+		if (!canvas) return;
+		if (!dragHandle || !initialRectangle) return;
+
+		if (e.cancelable) e.preventDefault();
+
+		const rect = canvas.getBoundingClientRect();
+		const touch = e.touches[0];
+		const dx = (touch.clientX - rect.left) * scaleFactorX - dragStart.x;
+		const dy = (touch.clientY - rect.top) * scaleFactorY - dragStart.y;
+
+		let newRect = { ...initialRectangle };
+
+		if (dragHandle === 'tl') {
+			newRect.left += dx;
+			newRect.top += dy;
+			newRect.width -= dx;
+			newRect.height -= dy;
+		} else if (dragHandle === 'tr') {
+			newRect.top += dy;
+			newRect.width += dx;
+			newRect.height -= dy;
+		} else if (dragHandle === 'bl') {
+			newRect.left += dx;
+			newRect.width -= dx;
+			newRect.height += dy;
+		} else if (dragHandle === 'br') {
+			newRect.width += dx;
+			newRect.height += dy;
+		} else if (dragHandle === 'body') {
+			newRect.left += dx;
+			newRect.top += dy;
+		}
+
+		preview.rectangle = newRect;
+		draw();
+	};
+
+	const onTouchEnd = (e: TouchEvent) => {
+		if (dragHandle) {
+			if (e.cancelable) e.preventDefault();
+		}
+		dragHandle = null;
+		initialRectangle = null;
+	};
+
 	onMount(() => {
 		const reader = new FileReader();
 		reader.onload = (e) => {
@@ -198,9 +269,17 @@
 		canvas.addEventListener('mousemove', onMouseMove);
 		canvas.addEventListener('mouseup', onMouseUp);
 
+		canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+		canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+		canvas.addEventListener('touchend', onTouchEnd);
+
 		return () => {
 			canvas.removeEventListener('mousemove', onMouseMove);
 			canvas.removeEventListener('mouseup', onMouseUp);
+
+			canvas.removeEventListener('touchstart', onTouchStart);
+			canvas.removeEventListener('touchmove', onTouchMove);
+			canvas.removeEventListener('touchend', onTouchEnd);
 		};
 	});
 

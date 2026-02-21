@@ -2,6 +2,7 @@
 	import type { Receipt } from '$lib/prompt';
 	import { ChevronDown, ThumbsUp } from '@lucide/svelte';
 	import DropdownSelection from './inputs/DropdownSelection.svelte';
+	import { slide } from 'svelte/transition';
 
 	type Props = {
 		receipt: Receipt;
@@ -120,7 +121,7 @@
 			</button>
 		</div>
 		{#if itemsOpen}
-			<div class="line-items-grid">
+			<div class="line-items-grid" transition:slide>
 				<p>No.</p>
 				<p class="name">Name</p>
 				<p>Qty</p>
@@ -180,7 +181,7 @@
 			</button>
 		</div>
 		{#if taxesOpen}
-			<div class="tax-items-grid">
+			<div class="tax-items-grid" transition:slide>
 				<p>No.</p>
 				<p class="name">Name</p>
 				<p>%</p>
@@ -385,9 +386,7 @@
 		grid-column: 2 / -1;
 		padding-left: 1rem;
 		border-left: 2px solid var(--border-color);
-		margin: 0.5rem 0;
 		padding-top: 0.5rem;
-		padding-bottom: 0.5rem;
 	}
 
 	.addon-items-grid {
@@ -446,7 +445,6 @@
 		border: 1px dashed var(--border-color);
 		border-radius: 0.5rem;
 		text-align: center;
-		margin-top: 0.5rem;
 		width: 100%;
 	}
 
@@ -458,7 +456,6 @@
 
 	.add-btn.addon {
 		width: auto;
-		padding: 0.25rem 1rem;
 		font-size: 0.9rem;
 	}
 
@@ -518,5 +515,18 @@
 
 	.split-slider {
 		flex: 1;
+	}
+
+	@media (max-width: 600px) {
+		.editor-card {
+			padding: 1rem;
+			padding-inline: 0.5rem;
+			gap: 0.5rem;
+		}
+
+		.line-items-grid,
+		.tax-items-grid {
+			grid-template-columns: 1.5rem 1fr 3rem 3rem auto;
+		}
 	}
 </style>

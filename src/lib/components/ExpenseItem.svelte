@@ -3,6 +3,7 @@
 	import { capitalize } from '$lib/utils';
 
 	import { ChevronDown } from '@lucide/svelte';
+	import { scale, slide } from 'svelte/transition';
 
 	type Props = {
 		expense: Expense;
@@ -31,8 +32,8 @@
 		</button>
 	</div>
 	{#if open}
-		<div class="additional-details">
-			<pre class="description">{expense.description}</pre>
+		<div class="additional-details" transition:slide>
+			<pre class="description" transition:scale>{expense.description}</pre>
 			<div class="buttons">
 				<button onclick={() => deleteFunc(expense.id)} class="delete-btn">Delete</button>
 				<button class="edit-btn">Edit</button>
@@ -46,6 +47,12 @@
 		display: block;
 		padding: 0;
 		margin: 0;
+	}
+
+	pre {
+		width: 100%;
+		overflow-x: auto;
+		padding: 0.5rem;
 	}
 
 	.expense-item {

@@ -130,9 +130,7 @@
 <section>
 	<div class="header">
 		<h2>Recent Expenses</h2>
-		<button class="new-expense-button" onclick={() => (addExpensesMenuOpen = true)}>
-			+ New Expense
-		</button>
+		<button class="new-expense-button" onclick={() => (addExpensesMenuOpen = true)}> + New </button>
 	</div>
 	<div class="filters">
 		<button class:selected={selectedCategory === null} onclick={() => (selectedCategory = null)}>

@@ -6,6 +6,7 @@
 	import ReceiptExpensesList from './ReceiptExpensesList.svelte';
 	import ReceiptScanMenu from './ReceiptScanMenu.svelte';
 	import { ArrowLeft } from '@lucide/svelte';
+	import { slide, fly } from 'svelte/transition';
 
 	type Props = {
 		addExpensesMenuOpen: boolean;
@@ -19,14 +20,17 @@
 	// Second page for adding expenses through images
 	const MAX_PAGES = 3;
 	let currentPage = $state(0);
+	let direction = $state(1);
 
 	const nextPage = () => {
 		if (currentPage < MAX_PAGES) {
+			direction = 1;
 			currentPage++;
 		}
 	};
 
 	const prevPage = () => {
+		direction = -1;
 		if (currentPage == 1 || currentPage == 2) {
 			// Past Mode Selection
 			currentPage = 0;
@@ -55,26 +59,44 @@
 </script>
 
 {#if addExpensesMenuOpen}
-	<div class="container">
+	<div class="container" transition:slide>
 		<div class="content">
-			{#if currentPage === 0}
-				<div class="prompt">
-					<h2>How would you like to add expenses?</h2>
-					<div class="buttons">
-						<button onclick={() => (currentPage = 1)}>Manually</button>
-						<button onclick={() => (currentPage = 2)}>Images</button>
-					</div>
+			{#key currentPage}
+				<div
+					class="page-transition-wrapper"
+					in:fly={{ x: direction * 100 + 'vw', duration: 400, opacity: 1 }}
+					out:fly={{ x: -direction * 100 + 'vw', duration: 400, opacity: 1 }}
+				>
+					{#if currentPage === 0}
+						<div class="prompt">
+							<h2>How would you like to add expenses?</h2>
+							<div class="buttons">
+								<button
+									onclick={() => {
+										direction = 1;
+										currentPage = 1;
+									}}>Manually</button
+								>
+								<button
+									onclick={() => {
+										direction = 1;
+										currentPage = 2;
+									}}>Images</button
+								>
+							</div>
+						</div>
+					{/if}
+					{#if currentPage === 1}
+						<NewExpenseMenu {addExpenses} {categories} />
+					{/if}
+					{#if currentPage === 2}
+						<ReceiptScanMenu bind:receipts {nextPage} />
+					{/if}
+					{#if currentPage === 3 && receipts.length > 0}
+						<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
+					{/if}
 				</div>
-			{/if}
-			{#if currentPage === 1}
-				<NewExpenseMenu {addExpenses} {categories} />
-			{/if}
-			{#if currentPage === 2}
-				<ReceiptScanMenu bind:receipts {nextPage} />
-			{/if}
-			{#if currentPage === 3 && receipts.length > 0}
-				<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
-			{/if}
+			{/key}
 			<button class="cancel-btn" onclick={prevPage}><ArrowLeft /></button>
 		</div>
 	</div>
@@ -95,9 +117,20 @@
 
 	.content {
 		width: 100%;
-		min-height: 100%;
-		overflow: auto;
+		height: 100%;
+		overflow: hidden;
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr;
 		background: var(--background-color);
+	}
+
+	.page-transition-wrapper {
+		grid-column: 1;
+		grid-row: 1;
+		width: 100%;
+		height: 100%;
+		overflow-y: auto;
 	}
 
 	.prompt {
@@ -149,5 +182,16 @@
 
 	.cancel-btn:hover {
 		color: var(--text-color);
+	}
+
+	@media (max-width: 600px) {
+		h2 {
+			text-wrap: wrap;
+			padding-inline: 2rem;
+			text-align: center;
+		}
+		.buttons {
+			flex-direction: column;
+		}
 	}
 </style>
