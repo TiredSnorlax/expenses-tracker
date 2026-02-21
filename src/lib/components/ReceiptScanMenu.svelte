@@ -175,8 +175,9 @@ This parent should only be responsible for managing the state and coordinating t
 <style>
 	.page-container {
 		max-width: 1200px;
-		margin: 2rem auto;
+		margin: 0 auto;
 		padding: 0 1rem;
+		padding-top: 4rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;

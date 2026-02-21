@@ -2,6 +2,7 @@
 	import type { Expense, Profile } from '$lib';
 	import { onMount } from 'svelte';
 	import { Chart, registerables } from 'chart.js';
+	import { fly } from 'svelte/transition';
 
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 
@@ -135,9 +136,11 @@
 
 <section class="date">
 	<button onclick={decrementMonth}><ChevronLeft /></button>
-	{#key currentDate}
-		<h2>{displayDate()}</h2>
-	{/key}
+	<div class="date-text">
+		{#key currentDate}
+			<h2 in:fly={{ y: 20 }} out:fly={{ y: -20 }}>{displayDate()}</h2>
+		{/key}
+	</div>
 	<button onclick={incrementMonth}><ChevronRight /></button>
 </section>
 
@@ -183,6 +186,20 @@
 		align-items: center;
 		padding: 2rem;
 		gap: 1rem;
+	}
+
+	.date-text {
+		display: grid;
+		place-items: center;
+		min-width: 200px;
+		overflow: hidden;
+	}
+
+	.date-text h2 {
+		grid-area: 1 / 1;
+		margin: 0;
+		width: 100%;
+		text-align: center;
 	}
 
 	.overview {
@@ -235,6 +252,17 @@
 	@media (max-width: 600px) {
 		.overview {
 			padding-inline: 0.5rem;
+		}
+
+		.budget-info h2 {
+			font-size: 1rem;
+		}
+
+		.budget-info .amount {
+			margin: 0;
+			font-size: 1.8rem;
+			font-weight: bold;
+			color: var(--text-color);
 		}
 	}
 </style>
