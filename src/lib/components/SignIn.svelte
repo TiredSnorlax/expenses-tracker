@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { signInWithGoogle } from '$lib/stores/auth';
 
 	let loading: boolean = false;

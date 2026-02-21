@@ -4,6 +4,7 @@ import {
 	onAuthStateChanged,
 	signInWithPopup,
 	signInWithRedirect,
+	getRedirectResult,
 	signOut as firebaseSignOut,
 	type User,
 	type UserCredential
@@ -79,14 +80,21 @@ export const signInWithGoogle = async () => {
 
 	try {
 		// Use popup for desktop, redirect for mobile
-		if (window.innerWidth < 768) {
-			await signInWithRedirect(auth, googleProvider);
-			// Redirect doesn't return a value immediately
-			return;
-		} else {
-			const result: UserCredential = await signInWithPopup(auth, googleProvider);
-			return result.user;
-		}
+		// if (window.innerWidth < 768) {
+		// 	await signInWithRedirect(auth, googleProvider);
+		// 	// Redirect doesn't return a value immediately
+		// 	const result = await getRedirectResult(auth);
+		// 	if (result) {
+		// 		return result.user;
+		// 	} else {
+		// 		throw new Error('No user found');
+		// 	}
+		// } else {
+		// 	const result: UserCredential = await signInWithPopup(auth, googleProvider);
+		// 	return result.user;
+		// }
+		const result: UserCredential = await signInWithPopup(auth, googleProvider);
+		return result.user;
 	} catch (error) {
 		console.error('Sign-in error:', error);
 		throw error;
