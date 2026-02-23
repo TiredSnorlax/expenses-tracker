@@ -4,11 +4,22 @@ export interface Profile {
 	monthlyBudget: number;
 	// List of Expense Ids
 	expenses: string[];
+	groups: string[];
+}
+
+export interface Group {
+	id: string;
+	name: string;
+	description: string;
+	budget: number;
+	spent: number;
+	expenses: string[];
 }
 
 export interface Expense {
 	id: string;
 	profileId: string;
+	groupId: string | null;
 	title: string;
 	description: string;
 	category: string;
@@ -24,8 +35,18 @@ export const createNewExpense = () => {
 	const category = '';
 	const title = '';
 	const description = '';
+	const groupId = null;
 
-	return { id, timestamp, amount, category, title, description, profileId: '0' } as Expense;
+	return {
+		id,
+		timestamp,
+		amount,
+		category,
+		title,
+		description,
+		profileId: '0',
+		groupId
+	} as Expense;
 };
 
 export const formatDate = (date: Date) => {
@@ -41,6 +62,7 @@ export const defaultExpenses = (): Expense[] => {
 		{
 			id: '1',
 			profileId: '1',
+			groupId: null,
 			title: 'Groceries',
 			description: 'Weekly grocery shopping at the local supermarket.',
 			category: 'Food',
@@ -50,6 +72,7 @@ export const defaultExpenses = (): Expense[] => {
 		{
 			id: '2',
 			profileId: '1',
+			groupId: null,
 			title: 'Train ticket',
 			description: 'Monthly pass for public transport.',
 			category: 'Transport',
@@ -59,6 +82,7 @@ export const defaultExpenses = (): Expense[] => {
 		{
 			id: '3',
 			profileId: '1',
+			groupId: null,
 			title: 'Lunch with colleagues',
 			description: 'Team lunch at the new Italian restaurant.',
 			category: 'Food',
@@ -68,6 +92,7 @@ export const defaultExpenses = (): Expense[] => {
 		{
 			id: '4',
 			profileId: '1',
+			groupId: null,
 			title: 'New headphones',
 			description: 'Noise-cancelling headphones for the office.',
 			category: 'Entertainment',
@@ -77,6 +102,7 @@ export const defaultExpenses = (): Expense[] => {
 		{
 			id: '5',
 			profileId: '1',
+			groupId: null,
 			title: 'Bus fare',
 			description: 'One-way ticket to the city center.',
 			category: 'Transport',

@@ -1,16 +1,19 @@
 <script lang="ts">
-	import { createNewExpense, type Expense } from '$lib';
-	import { onMount } from 'svelte';
+	import { type Expense } from '$lib';
+	import { slide } from 'svelte/transition';
 	import DropdownSelection from './inputs/DropdownSelection.svelte';
 
 	type Props = {
-		addExpenses: (newExpenses: Expense[]) => Promise<void>;
+		editExpenseIndex: number | null;
+		expenseToEdit: Expense;
 		categories: string[];
+		onUpdate: (updatedExpense: Expense) => void;
 	};
 
-	let { addExpenses, categories }: Props = $props();
+	let { expenseToEdit, categories, onUpdate, editExpenseIndex = $bindable() }: Props = $props();
 
-	let newExpense: Expense | null = $state(null);
+	// svelte-ignore state_referenced_locally
+	let updatedExpense: Expense = $state({ ...expenseToEdit });
 	let errorMessage: string = $state('');
 
 	const validateExpense = (expense: Expense): boolean => {
@@ -30,41 +33,43 @@
 		return true;
 	};
 
-	const addNewExpense = () => {
-		if (!newExpense) return;
-		if (!validateExpense(newExpense)) {
+	const handleUpdateExpense = () => {
+		if (!validateExpense(updatedExpense)) {
 			return; // Stop if validation fails
 		}
-		addExpenses([newExpense]);
-		newExpense = createNewExpense(); // Reset newExpense after successful addition
+		onUpdate(updatedExpense);
 	};
 
-	onMount(() => {
-		newExpense = createNewExpense();
-	});
+	const handleCancel = () => {
+		editExpenseIndex = null;
+	};
 </script>
 
-{#if newExpense}
+<div class="container" transition:slide>
 	<div class="card">
-		<h3>New Expense</h3>
+		<h3>Edit Expense</h3>
 		<div class="card-content">
 			<div class="input-container">
 				<label for="title">Title</label>
 				<input
 					id="title"
 					type="text"
-					bind:value={newExpense.title}
+					bind:value={updatedExpense.title}
 					placeholder="What did you spend on?"
 				/>
 			</div>
 			<div class="input-container category">
-				<DropdownSelection name="Category" options={categories} value={newExpense.category} />
+				<DropdownSelection
+					name="Category"
+					options={categories}
+					bind:value={updatedExpense.category}
+				/>
 			</div>
 			<div class="input-container">
 				<label for="description">Description</label>
 				<textarea
 					id="description"
-					bind:value={newExpense.description}
+					bind:value={updatedExpense.description}
 					placeholder="Add more details (optional)"
 				></textarea>
 			</div>
@@ -72,26 +77,36 @@
 				<label for="amount">Amount</label>
 				<div class="amount-input-wrapper">
 					<span>$</span>
-					<input id="amount" type="number" bind:value={newExpense.amount} placeholder="0.00" />
+					<input id="amount" type="number" bind:value={updatedExpense.amount} placeholder="0.00" />
 				</div>
 			</div>
 			{#if errorMessage}
 				<p class="error-message">{errorMessage}</p>
 			{/if}
 			<div class="buttons">
-				<button class="add-button" onclick={addNewExpense}>Add Expense</button>
+				<button class="cancel-button" onclick={handleCancel}>Cancel</button>
+				<button class="add-button" onclick={handleUpdateExpense}>Save Changes</button>
 			</div>
 		</div>
 	</div>
-{/if}
+</div>
 
 <style>
+	.container {
+		position: fixed;
+		inset: 0;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		background: var(--background-color);
+	}
 	.card {
 		padding: 2rem;
-		border-radius: 8px;
 		width: 100%;
 
-		margin-inline: auto;
+		margin: 0 auto;
 		max-width: 800px;
 	}
 
@@ -158,6 +173,21 @@
 	.add-button {
 		background-color: var(--secondary-color);
 		color: white;
+	}
+
+	.add-button:hover {
+		background-color: var(--text-color);
+		color: var(--secondary-color);
+	}
+
+	.cancel-button {
+		background-color: var(--background-color);
+		color: var(--text-color);
+		border: 1px solid var(--border-color);
+	}
+
+	.cancel-button:hover {
+		background-color: var(--primary-color);
 	}
 
 	.error-message {

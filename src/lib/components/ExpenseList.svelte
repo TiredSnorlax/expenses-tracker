@@ -4,9 +4,17 @@
 	import type { AuthUser } from '$lib/stores/auth';
 	import AddExpensesMenu from './AddExpensesMenu.svelte';
 
-	import { arrayRemove, arrayUnion, collection, doc, writeBatch } from 'firebase/firestore';
+	import {
+		arrayRemove,
+		arrayUnion,
+		collection,
+		doc,
+		updateDoc,
+		writeBatch
+	} from 'firebase/firestore';
 	import { db } from '$lib/firebase';
 	import { capitalize } from '$lib/utils';
+	import EditExpenseMenu from './EditExpenseMenu.svelte';
 
 	type Props = {
 		noScroll: boolean;
@@ -17,6 +25,8 @@
 
 	let { noScroll = $bindable(), expenses = $bindable(), profile, user }: Props = $props();
 	let addExpensesMenuOpen: boolean = $state(false);
+	let editExpenseMenuOpen = $state(false);
+	let editExpenseIndex: number | null = $state(null);
 
 	// Filter by Category
 	const categories = $derived([...new Set(expenses.map((e) => e.category))]);
@@ -117,6 +127,29 @@
 		}
 	};
 
+	const updateExpense = async (updatedExpense: Expense) => {
+		if (!user) return;
+		try {
+			const expenseDocRef = doc(db, 'expenses', updatedExpense.id);
+			await updateDoc(expenseDocRef, {
+				...updatedExpense
+			});
+
+			// Local updates
+			if (editExpenseIndex !== null) {
+				console.log('local update');
+				expenses[editExpenseIndex] = updatedExpense;
+				editExpenseIndex = null;
+			}
+		} catch (error) {
+			console.error('Error updating expense:', error);
+		}
+	};
+
+	const setEdit = (id: string) => {
+		editExpenseIndex = expenses.findIndex((expense) => expense.id === id);
+	};
+
 	$effect(() => {
 		if (addExpensesMenuOpen) {
 			noScroll = true;
@@ -169,11 +202,22 @@
 	</div>
 	<ul>
 		{#each processedExpenses as expense (expense.id)}
-			<ExpenseItem {expense} deleteFunc={deleteExpense} />
+			<ExpenseItem {expense} deleteFunc={deleteExpense} {setEdit} />
 		{/each}
 	</ul>
 </section>
-<AddExpensesMenu bind:addExpensesMenuOpen {categories} {addExpenses} />
+{#if addExpensesMenuOpen}
+	<AddExpensesMenu bind:addExpensesMenuOpen {categories} {addExpenses} />
+{/if}
+
+{#if editExpenseIndex !== null}
+	<EditExpenseMenu
+		bind:editExpenseIndex
+		expenseToEdit={expenses[editExpenseIndex]}
+		{categories}
+		onUpdate={updateExpense}
+	/>
+{/if}
 
 <style>
 	.header {

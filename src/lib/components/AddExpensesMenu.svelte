@@ -58,49 +58,47 @@
 	};
 </script>
 
-{#if addExpensesMenuOpen}
-	<div class="container" transition:slide>
-		<div class="content">
-			{#key currentPage}
-				<div
-					class="page-transition-wrapper"
-					in:fly={{ x: direction * 100 + 'vw', duration: 400, opacity: 1 }}
-					out:fly={{ x: -direction * 100 + 'vw', duration: 400, opacity: 1 }}
-				>
-					{#if currentPage === 0}
-						<div class="prompt">
-							<h2>How would you like to add expenses?</h2>
-							<div class="buttons">
-								<button
-									onclick={() => {
-										direction = 1;
-										currentPage = 1;
-									}}>Manually</button
-								>
-								<button
-									onclick={() => {
-										direction = 1;
-										currentPage = 2;
-									}}>Images</button
-								>
-							</div>
+<div class="container" transition:slide>
+	<div class="content">
+		{#key currentPage}
+			<div
+				class="page-transition-wrapper"
+				in:fly={{ x: direction * 100 + 'vw', duration: 400, opacity: 1 }}
+				out:fly={{ x: -direction * 100 + 'vw', duration: 400, opacity: 1 }}
+			>
+				{#if currentPage === 0}
+					<div class="prompt">
+						<h2>How would you like to add expenses?</h2>
+						<div class="buttons">
+							<button
+								onclick={() => {
+									direction = 1;
+									currentPage = 1;
+								}}>Manually</button
+							>
+							<button
+								onclick={() => {
+									direction = 1;
+									currentPage = 2;
+								}}>Images</button
+							>
 						</div>
-					{/if}
-					{#if currentPage === 1}
-						<NewExpenseMenu {addExpenses} {categories} />
-					{/if}
-					{#if currentPage === 2}
-						<ReceiptScanMenu bind:receipts {nextPage} />
-					{/if}
-					{#if currentPage === 3 && receipts.length > 0}
-						<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
-					{/if}
-				</div>
-			{/key}
-			<button class="cancel-btn" onclick={prevPage}><ArrowLeft /></button>
-		</div>
+					</div>
+				{/if}
+				{#if currentPage === 1}
+					<NewExpenseMenu {addExpenses} {categories} />
+				{/if}
+				{#if currentPage === 2}
+					<ReceiptScanMenu bind:receipts {nextPage} />
+				{/if}
+				{#if currentPage === 3 && receipts.length > 0}
+					<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
+				{/if}
+			</div>
+		{/key}
+		<button class="cancel-btn" onclick={prevPage}><ArrowLeft /></button>
 	</div>
-{/if}
+</div>
 
 <style>
 	.container {

@@ -10,7 +10,7 @@
 	import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 	let currentDate = $state(new Date());
-	let expenses: Expense[] = $state(defaultExpenses());
+	let expenses: Expense[] = $state([]);
 
 	let noScroll = $state(false);
 
@@ -27,7 +27,8 @@
 		} else {
 			let newProfile: Profile = {
 				monthlyBudget: 2000,
-				expenses: []
+				expenses: [],
+				groups: []
 			};
 			await setDoc(docRef, newProfile);
 			profile = newProfile;
@@ -46,6 +47,7 @@
 		const q = query(
 			expensesCol,
 			where('profileId', '==', user.uid),
+			where('groupId', '==', null),
 			where('timestamp', '>=', firstDay),
 			where('timestamp', '<=', lastDay)
 		);

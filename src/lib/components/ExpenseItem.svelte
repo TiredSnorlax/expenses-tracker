@@ -8,9 +8,10 @@
 	type Props = {
 		expense: Expense;
 		deleteFunc: (id: string) => void;
+		setEdit: (id: string) => void;
 	};
 
-	let { expense, deleteFunc }: Props = $props();
+	let { expense, deleteFunc, setEdit }: Props = $props();
 
 	let open = $state(false);
 </script>
@@ -36,7 +37,7 @@
 			<pre class="description" transition:scale>{expense.description}</pre>
 			<div class="buttons">
 				<button onclick={() => deleteFunc(expense.id)} class="delete-btn">Delete</button>
-				<button class="edit-btn">Edit</button>
+				<button class="edit-btn" onclick={() => setEdit(expense.id)}>Edit</button>
 			</div>
 		</div>
 	{/if}
@@ -51,6 +52,7 @@
 
 	pre {
 		width: 100%;
+		overflow-y: hidden;
 		overflow-x: auto;
 		padding: 0.5rem;
 	}
