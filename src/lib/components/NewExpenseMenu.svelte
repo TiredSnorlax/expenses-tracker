@@ -6,9 +6,11 @@
 	type Props = {
 		addExpenses: (newExpenses: Expense[]) => Promise<void>;
 		categories: string[];
+		groupId?: string | null;
+		groupName?: string | null;
 	};
 
-	let { addExpenses, categories }: Props = $props();
+	let { addExpenses, categories, groupId = null, groupName = null }: Props = $props();
 
 	let newExpense: Expense | null = $state(null);
 	let errorMessage: string = $state('');
@@ -35,6 +37,9 @@
 		if (!validateExpense(newExpense)) {
 			return; // Stop if validation fails
 		}
+		if (groupId) {
+			newExpense.groupId = groupId;
+		}
 		addExpenses([newExpense]);
 		newExpense = createNewExpense(); // Reset newExpense after successful addition
 	};
@@ -46,7 +51,11 @@
 
 {#if newExpense}
 	<div class="card">
-		<h3>New Expense</h3>
+		{#if groupId}
+			<h3>New Expense in {groupName}</h3>
+		{:else}
+			<h3>New Expense</h3>
+		{/if}
 		<div class="card-content">
 			<div class="input-container">
 				<label for="title">Title</label>

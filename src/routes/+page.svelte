@@ -8,6 +8,7 @@
 
 	import { db } from '$lib/firebase';
 	import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+	import MonthDisplay from '$lib/components/MonthDisplay.svelte';
 
 	let currentDate = $state(new Date());
 	let expenses: Expense[] = $state([]);
@@ -72,7 +73,8 @@
 <main class="container" class:no-scroll={noScroll}>
 	{#if user && profile}
 		<UserAvatar {user} />
-		<Info bind:currentDate bind:expenses {profile} />
+		<MonthDisplay bind:currentDate />
+		<Info {currentDate} bind:expenses budget={profile.monthlyBudget} />
 		<ExpenseList bind:noScroll bind:expenses {profile} {user} />
 	{:else}
 		<SignIn />

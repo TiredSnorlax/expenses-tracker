@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth';
 	import { db } from '$lib/firebase';
-	import { collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
-	import type { Expense, Profile } from '$lib';
+	import {
+		collection,
+		query,
+		where,
+		getDocs,
+		doc,
+		getDoc,
+		updateDoc,
+		writeBatch,
+		arrayUnion
+	} from 'firebase/firestore';
+	import type { Expense, Profile, Group } from '$lib';
 
 	import ProfileCard from '$lib/components/ProfileCard.svelte';
 	import LoadingSpinner from '$lib/components/misc/LoadingSpinner.svelte';
@@ -11,17 +21,18 @@
 	import { goto } from '$app/navigation';
 	import MonthlyExpenseComparison from '$lib/components/MonthlyExpenseComparison.svelte';
 	import { ArrowLeft } from '@lucide/svelte';
+	import GroupsList from '$lib/components/GroupsList.svelte';
 
 	let user = $derived($authStore.user);
 	let profile: Profile | null = $state(null);
 	let expenses: Expense[] = $state([]);
+	let groups: Group[] = $state([]);
 	let loading = $state(true);
 
 	let startDate: Date = $state(new Date());
 	let endDate: Date = $state(new Date());
 
 	onMount(() => {
-		console.log('on mount');
 		let now = new Date();
 		startDate.setMonth(now.getMonth() - 11);
 		startDate.setDate(1);
@@ -40,11 +51,9 @@
 		startDate = new Date(start.year, start.month, 1);
 		// Setting the date and time in this way makes it go back to the end of the prev month
 		endDate = new Date(end.year, end.month + 1, 0, 23, 59, 59);
-		console.log(startDate, endDate);
 	};
 
 	const fetchProfile = async (uid: string) => {
-		console.log('getting profile');
 		const docRef = doc(db, 'profiles', uid);
 		const docSnap = await getDoc(docRef);
 		if (docSnap.exists()) {
@@ -53,16 +62,13 @@
 	};
 
 	const fetchExpenses = async (uid: string, start: Date, end: Date) => {
-		console.log('getting expenses');
-		console.log(startDate, endDate);
 		const monthDiff = getMonthDiff(start, end);
-
-		console.log(monthDiff);
 
 		const expensesCol = collection(db, 'expenses');
 		const q = query(
 			expensesCol,
 			where('profileId', '==', uid),
+			where('groupId', '==', null), // Replace 'someGroupId' with the actual group ID
 			where('timestamp', '>=', start),
 			where('timestamp', '<=', end)
 		);
@@ -90,6 +96,44 @@
 	$effect(() => {
 		if (user) fetchExpenses(user.uid, startDate, endDate);
 	});
+
+	const fetchGroups = async (profileId: string) => {
+		const groupsCol = collection(db, 'groups');
+		const q = query(groupsCol, where('profileId', '==', profileId));
+		const querySnapshot = await getDocs(q);
+		groups = querySnapshot.docs.map((doc) => {
+			return { id: doc.id, ...doc.data() } as Group;
+		});
+	};
+
+	const addNewGroup = async (newGroup: Group) => {
+		if (!user) return;
+
+		const batch = writeBatch(db);
+		const newGroupRef = doc(collection(db, 'groups'));
+		const id = newGroupRef.id;
+
+		const groupData: Group = {
+			...newGroup,
+			id: id,
+			profileId: user.uid
+		};
+
+		batch.set(newGroupRef, groupData);
+
+		const profileRef = doc(db, 'profiles', user.uid);
+		batch.update(profileRef, {
+			groups: arrayUnion(id)
+		});
+
+		await batch.commit();
+
+		groups = [...groups, groupData];
+	};
+
+	$effect(() => {
+		if (user) fetchGroups(user.uid);
+	});
 </script>
 
 <div class="container">
@@ -102,21 +146,26 @@
 		<div class="chart-container">
 			<MonthlyExpenseComparison {expenses} {startDate} {endDate} />
 		</div>
+
+		<GroupsList {groups} {user} {addNewGroup} />
 	{:else}
 		<LoadingSpinner msg="Getting profile..." />
 	{/if}
-	<button class="back-btn" onclick={() => goto('/')}><ArrowLeft /></button>
+	<a href="/" class="back-btn">
+		<ArrowLeft size={24} />
+	</a>
 </div>
 
 <style>
 	h2 {
-		text-align: center;
+		margin-top: 1rem;
 	}
 	.container {
 		max-width: 900px;
 		margin: 2rem auto;
 		margin-top: 5rem;
 		padding: 0 1rem;
+		padding-bottom: 4rem;
 		color: var(--text-color);
 	}
 	.chart-container {
@@ -129,6 +178,7 @@
 		border: 1px solid var(--border-color);
 		margin-top: 1rem;
 	}
+
 	.range-selection {
 		display: flex;
 		justify-content: center;

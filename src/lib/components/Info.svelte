@@ -2,17 +2,16 @@
 	import type { Expense, Profile } from '$lib';
 	import { onMount } from 'svelte';
 	import { Chart, registerables } from 'chart.js';
-	import { fly } from 'svelte/transition';
-
-	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 
 	type Props = {
 		currentDate: Date;
 		expenses: Expense[];
-		profile: Profile;
+		budget: number;
+		isGroup?: boolean;
+		groupName?: string;
 	};
 
-	let { currentDate = $bindable(), expenses = $bindable(), profile }: Props = $props();
+	let { currentDate, expenses = $bindable(), budget, isGroup = false, groupName }: Props = $props();
 
 	let chartCanvas: HTMLCanvasElement;
 	let chart: Chart | null = $state(null);
@@ -49,27 +48,22 @@
 	let expensesByCategory: Map<string, number> = $derived(getExpensesByCategory(expenses));
 
 	let totalSpent = $derived(expenses.reduce((sum, expense) => sum + expense.amount, 0));
-	let remainingBudget = $derived(profile.monthlyBudget - totalSpent);
+	let remainingBudget = $derived(budget - totalSpent);
 
 	const updateChart = () => {
 		if (!chart) return;
 		const backgroundColors = generateChartColors(expensesByCategory.size);
 		const borderColors = backgroundColors.map((c) => c.replace('0.8', '1'));
+
 		chart.data.labels = [...expensesByCategory.keys(), 'Unspent'];
-		chart.data.datasets[0].data = [
-			...expensesByCategory.values(),
-			profile.monthlyBudget - totalSpent
-		];
+		chart.data.datasets[0].data = [...expensesByCategory.values(), remainingBudget];
+
 		chart.data.datasets[0].backgroundColor = backgroundColors;
 		chart.data.datasets[0].borderColor = borderColors;
 		chart.update();
 	};
 
-	const plotChart = (
-		expenses: Expense[],
-		expensesByCategory: Map<string, number>,
-		totalSpent: number
-	) => {
+	const plotChart = (expensesByCategory: Map<string, number>) => {
 		const ctx = chartCanvas.getContext('2d');
 		if (!ctx) return;
 		if (chart) {
@@ -77,14 +71,27 @@
 		} else {
 			const backgroundColors = generateChartColors(expensesByCategory.size);
 			const borderColors = backgroundColors.map((c) => c.replace('0.8', '1'));
+
+			let labels: string[];
+			let data: number[];
+			let title: string;
+
+			if (isGroup && groupName) {
+				title = `Monthly Expense Breakdown for ${groupName}`;
+			} else {
+				title = 'Monthly Expense Breakdown';
+			}
+			labels = [...expensesByCategory.keys(), 'Unspent'];
+			data = [...expensesByCategory.values(), remainingBudget];
+
 			chart = new Chart(ctx, {
 				type: 'pie',
 				data: {
-					labels: [...expensesByCategory.keys(), 'Unspent'],
+					labels: labels,
 					datasets: [
 						{
 							label: 'Expense Breakdown',
-							data: [...expensesByCategory.values(), remainingBudget],
+							data: data,
 							backgroundColor: backgroundColors,
 							borderColor: borderColors,
 							borderWidth: 1
@@ -100,7 +107,7 @@
 						},
 						title: {
 							display: true,
-							text: 'Monthly Expense Breakdown'
+							text: title
 						}
 					}
 				}
@@ -108,46 +115,23 @@
 		}
 	};
 
-	const displayDate = () => {
-		return new Intl.DateTimeFormat('en-US', {
-			year: 'numeric',
-			month: 'long'
-		}).format(currentDate);
-	};
-
-	const incrementMonth = () => {
-		currentDate.setMonth(currentDate.getMonth() + 1);
-		currentDate = new Date(currentDate);
-	};
-
-	const decrementMonth = () => {
-		currentDate.setMonth(currentDate.getMonth() - 1);
-		currentDate = new Date(currentDate);
-	};
-
 	onMount(() => {
 		Chart.register(...registerables);
 	});
 
 	$effect(() => {
-		plotChart(expenses, expensesByCategory, totalSpent);
+		plotChart(expensesByCategory);
 	});
 </script>
 
-<section class="date">
-	<button onclick={decrementMonth}><ChevronLeft /></button>
-	<div class="date-text">
-		{#key currentDate}
-			<h2 in:fly={{ y: 20 }} out:fly={{ y: -20 }}>{displayDate()}</h2>
-		{/key}
-	</div>
-	<button onclick={incrementMonth}><ChevronRight /></button>
-</section>
-
 <section class="overview">
 	<div class="budget-info">
-		<h2>Monthly Budget</h2>
-		<p class="amount">S${profile.monthlyBudget.toFixed(2)}</p>
+		{#if isGroup && groupName}
+			<h2>Total Budget</h2>
+		{:else}
+			<h2>Monthly Budget</h2>
+		{/if}
+		<p class="amount">S${budget.toFixed(2)}</p>
 	</div>
 	<div class="budget-info">
 		<h2>Remaining Budget</h2>
@@ -162,46 +146,6 @@
 </section>
 
 <style>
-	button {
-		background: none;
-		padding: none;
-		outline: none;
-		border: none;
-		color: var(--subtle-text-color);
-
-		display: flex;
-		justify-content: center;
-		align-items: center;
-
-		cursor: pointer;
-	}
-
-	button:hover {
-		color: var(--secondary-color);
-	}
-
-	.date {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: 2rem;
-		gap: 1rem;
-	}
-
-	.date-text {
-		display: grid;
-		place-items: center;
-		min-width: 200px;
-		overflow: hidden;
-	}
-
-	.date-text h2 {
-		grid-area: 1 / 1;
-		margin: 0;
-		width: 100%;
-		text-align: center;
-	}
-
 	.overview {
 		display: flex;
 		justify-content: space-around;

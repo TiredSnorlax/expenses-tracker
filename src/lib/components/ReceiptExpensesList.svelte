@@ -9,9 +9,10 @@
 		closePage: () => void;
 		addExpenses: (expenses: Expense[]) => Promise<void>;
 		categories: string[];
+		groupId?: string | null;
 	};
 
-	let { receipts = $bindable(), closePage, addExpenses, categories }: Props = $props();
+	let { receipts = $bindable(), closePage, addExpenses, categories, groupId = null }: Props = $props();
 
 	let confirmed: boolean[] = $state([]);
 	let allConfirmed = $derived(confirmed.every((c) => c));
@@ -35,6 +36,9 @@
 				newExpense.amount = receipt.total * receipt.split;
 				newExpense.category = receipt.category;
 				newExpense.description = `Paid for ${receipt.split} share\n\n`;
+				if (groupId) {
+					newExpense.groupId = groupId;
+				}
 
 				for (const item of receipt.items) {
 					let itemDesc = `${item.quantity} x ${item.name}($${item.unit_price.toFixed(2)})\n`;

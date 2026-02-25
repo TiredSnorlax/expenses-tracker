@@ -9,12 +9,25 @@ export interface Profile {
 
 export interface Group {
 	id: string;
+	profileId: string;
 	name: string;
 	description: string;
 	budget: number;
 	spent: number;
 	expenses: string[];
 }
+
+export const defaultGroup = () => {
+	return {
+		id: '',
+		profileId: '0',
+		name: '',
+		description: '',
+		budget: 0,
+		spent: 0,
+		expenses: []
+	} as Group;
+};
 
 export interface Expense {
 	id: string;

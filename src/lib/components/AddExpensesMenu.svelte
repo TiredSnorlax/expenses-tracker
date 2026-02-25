@@ -12,9 +12,17 @@
 		addExpensesMenuOpen: boolean;
 		categories: string[];
 		addExpenses: (newExpenses: Expense[]) => Promise<void>;
+		groupId?: string | null;
+		groupName?: string | null;
 	};
 
-	let { addExpensesMenuOpen = $bindable(), categories, addExpenses }: Props = $props();
+	let {
+		addExpensesMenuOpen = $bindable(),
+		categories,
+		addExpenses,
+		groupId = null,
+		groupName = null
+	}: Props = $props();
 
 	// First page for adding expenses manually
 	// Second page for adding expenses through images
@@ -86,13 +94,13 @@
 					</div>
 				{/if}
 				{#if currentPage === 1}
-					<NewExpenseMenu {addExpenses} {categories} />
+					<NewExpenseMenu {addExpenses} {categories} {groupId} {groupName} />
 				{/if}
 				{#if currentPage === 2}
 					<ReceiptScanMenu bind:receipts {nextPage} />
 				{/if}
 				{#if currentPage === 3 && receipts.length > 0}
-					<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} />
+					<ReceiptExpensesList bind:receipts {closePage} {addExpenses} {categories} {groupId} />
 				{/if}
 			</div>
 		{/key}

@@ -21,9 +21,18 @@
 		expenses: Expense[];
 		profile: Profile;
 		user: AuthUser;
+		groupId?: string | null;
+		groupName?: string | null;
 	};
 
-	let { noScroll = $bindable(), expenses = $bindable(), profile, user }: Props = $props();
+	let {
+		noScroll = $bindable(),
+		expenses = $bindable(),
+		profile,
+		user,
+		groupId = null,
+		groupName = null
+	}: Props = $props();
 	let addExpensesMenuOpen: boolean = $state(false);
 	let editExpenseMenuOpen = $state(false);
 	let editExpenseIndex: number | null = $state(null);
@@ -207,7 +216,7 @@
 	</ul>
 </section>
 {#if addExpensesMenuOpen}
-	<AddExpensesMenu bind:addExpensesMenuOpen {categories} {addExpenses} />
+	<AddExpensesMenu bind:addExpensesMenuOpen {categories} {addExpenses} {groupId} {groupName} />
 {/if}
 
 {#if editExpenseIndex !== null}
