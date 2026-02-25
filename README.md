@@ -1,42 +1,44 @@
-# sv
+# Expense Tracker
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A web application built with SvelteKit for managing personal and group expenses, featuring automated receipt parsing powered by Gemini AI.
 
-## Creating a project
+## Receipt Parsing
 
-If you're seeing this, you've probably already done this step. Congrats!
+The application uses the Gemini 2.5 Flash Lite model to convert raw receipt text into structured data. It identifies and extracts the following information:
 
+- Merchant information (name and category)
+- Transaction totals and taxes
+- Itemized lists including quantities and unit prices
+- Nested add-ons and modifiers associated with specific items
+
+## Tech Stack
+
+- Frontend: SvelteKit, TypeScript, Vanilla CSS
+- Backend: SvelteKit API Routes
+- AI: Google Gemini AI (Generative Language API)
+- Database/Auth: Firebase
+
+## Development
+
+Install dependencies:
 ```sh
-# create a new project
-npx sv create my-app
+npm install
 ```
 
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv create --template minimal --types ts --add prettier --install npm finance-tracker
+Configure environment variables:
+Create a `.env` file in the root directory and add your Gemini API key:
+```
+GEMINI_KEY=your_api_key_here
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
+Start the development server:
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
-
+To create a production version:
 ```sh
 npm run build
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
