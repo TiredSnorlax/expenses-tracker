@@ -35,13 +35,13 @@
 	const addNewExpense = () => {
 		if (!newExpense) return;
 		if (!validateExpense(newExpense)) {
-			return; // Stop if validation fails
+			return;
 		}
 		if (groupId) {
 			newExpense.groupId = groupId;
 		}
 		addExpenses([newExpense]);
-		newExpense = createNewExpense(); // Reset newExpense after successful addition
+		newExpense = null;
 	};
 
 	onMount(() => {
@@ -67,7 +67,7 @@
 				/>
 			</div>
 			<div class="input-container category">
-				<DropdownSelection name="Category" options={categories} value={newExpense.category} />
+				<DropdownSelection name="Category" options={categories} bind:value={newExpense.category} />
 			</div>
 			<div class="input-container">
 				<label for="description">Description</label>

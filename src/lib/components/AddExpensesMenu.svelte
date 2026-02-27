@@ -94,7 +94,7 @@
 					</div>
 				{/if}
 				{#if currentPage === 1}
-					<NewExpenseMenu {addExpenses} {categories} {groupId} {groupName} />
+					<NewExpenseMenu addExpenses={onAddExpenses} {categories} {groupId} {groupName} />
 				{/if}
 				{#if currentPage === 2}
 					<ReceiptScanMenu bind:receipts {nextPage} />
